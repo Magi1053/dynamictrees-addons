@@ -3,12 +3,9 @@ name: Build and Publish
 on:
   push:
     branches: [main]
+    # `**` required so tags with `/` (e.g. rubber/v1.0.45) match; plain `aether/v*` often does not fire.
     tags:
-      - "aether/v*"
-      - "vinery/v*"
-      - "meadow/v*"
-      - "rubber/v*"
-      - "spectrum/v*"
+      - "**"
   pull_request:
     branches: [main]
 
