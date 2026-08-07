@@ -25,11 +25,23 @@ jobs:
             exit 1
           fi
           UA="skcraft-dynamictrees-addons (github.com/Magi1053/dynamictrees-addons)"
-          auth_hdr() { printf 'Authorization: %s' "$MODRINTH_TOKEN"; }
+          # Do not use printf '%s' with an unescaped token — tokens can contain '%' and break the header.
+          TOKEN_LEN=${#MODRINTH_TOKEN}
+          TOKEN_PREFIX=${MODRINTH_TOKEN:0:4}
+          echo "MODRINTH_TOKEN length=$TOKEN_LEN prefix=$TOKEN_PREFIX"
+          if [[ "$MODRINTH_TOKEN" == *$'\n'* ]] || [[ "$MODRINTH_TOKEN" == *$'\r'* ]]; then
+            echo "WARNING: MODRINTH_TOKEN contains CR/LF; trimming"
+            MODRINTH_TOKEN="${MODRINTH_TOKEN//$'\r'/}"
+            MODRINTH_TOKEN="${MODRINTH_TOKEN//$'\n'/}"
+          fi
+          if [[ "$MODRINTH_TOKEN" == Bearer\ * ]]; then
+            echo "WARNING: stripping Bearer prefix from MODRINTH_TOKEN"
+            MODRINTH_TOKEN="${MODRINTH_TOKEN#Bearer }"
+          fi
 
           echo "Validating token via GET /user ..."
           USER_CODE=$(curl -sS -o /tmp/user.json -w "%{http_code}" \
-            -H "$(auth_hdr)" \
+            -H "Authorization: ${MODRINTH_TOKEN}" \
             -H "User-Agent: ${UA}" \
             "https://api.modrinth.com/v2/user" || true)
           echo "GET /user -> HTTP $USER_CODE"
@@ -46,7 +58,7 @@ jobs:
             echo "Using workflow input project id: $PROJECT_ID"
           else
             EXISTING_CODE=$(curl -sS -o /tmp/existing.json -w "%{http_code}" \
-              -H "$(auth_hdr)" \
+              -H "Authorization: ${MODRINTH_TOKEN}" \
               -H "User-Agent: ${UA}" \
               "https://api.modrinth.com/v2/project/dtbetterend" || true)
             echo "GET /project/dtbetterend -> HTTP $EXISTING_CODE"
@@ -75,7 +87,7 @@ jobs:
                 }' > /tmp/project.json
               CREATE_CODE=$(curl -sS -o /tmp/created.json -w "%{http_code}" -X POST \
                 "https://api.modrinth.com/v2/project" \
-                -H "$(auth_hdr)" \
+                -H "Authorization: ${MODRINTH_TOKEN}" \
                 -H "User-Agent: ${UA}" \
                 -F "data=@/tmp/project.json;type=application/json" || true)
               echo "POST /project -> HTTP $CREATE_CODE"
