@@ -11,6 +11,7 @@ Gradle multi-project: each `mods/<name>` folder is a subproject (`:<name>`) and 
 | [`mods/meadow`](mods/meadow) | `dtmeadow` | [Let's Do] Meadow trees |
 | [`mods/rubber`](mods/rubber) | `dtrubber` | Rubber tree + latex tapping |
 | [`mods/spectrum`](mods/spectrum) | `dtspectrum` | Spectrum colored trees |
+| [`mods/betterend`](mods/betterend) | `dtbetterend` | BetterEnd End trees |
 
 Player-facing details are in each module’s `README.md` (synced as the Modrinth long description).
 
@@ -27,6 +28,7 @@ Player-facing details are in each module’s `README.md` (synced as the Modrinth
 ./gradlew :meadow:build
 ./gradlew :rubber:build
 ./gradlew :spectrum:build
+./gradlew :betterend:build
 
 ./gradlew build   # all modules
 ```

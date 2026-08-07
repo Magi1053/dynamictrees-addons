@@ -28,7 +28,7 @@ jobs:
           MODULE="${TAG%%/*}"
           VERSION="${TAG#*/v}"
           case "$MODULE" in
-            aether|vinery|meadow|rubber|spectrum) ;;
+            aether|vinery|meadow|rubber|spectrum|betterend) ;;
             *) echo "Unknown module in tag: $TAG (expected <module>/v<version>)"; exit 1 ;;
           esac
           if [[ "$TAG" != "$MODULE/v$VERSION" ]]; then

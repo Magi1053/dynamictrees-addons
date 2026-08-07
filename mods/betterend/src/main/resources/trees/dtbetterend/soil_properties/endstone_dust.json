@@ -1,0 +1,7 @@
+{
+  "primitive_soil": "betterend:endstone_dust",
+  "acceptable_soils": [
+    "moss_or_dust"
+  ],
+  "substitute_soil": "minecraft:end_stone"
+}
