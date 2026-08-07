@@ -20,6 +20,12 @@ neoForge {
         mappingsVersion = project.parchment_mappings_version
         minecraftVersion = project.parchment_minecraft_version
     }
+
+    mods {
+        dtaether {
+            sourceSet sourceSets.main
+        }
+    }
 }
 
 tasks.register('generateResources', Exec) {

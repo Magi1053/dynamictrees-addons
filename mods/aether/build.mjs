@@ -258,28 +258,21 @@ const SKYROOT_DT_PLACEMENTS = [
     },
 ];
 
-const DEEP_AETHER_TREE_BIOMES = [
-    "deep_aether:aerglow_forest",
-    "deep_aether:blue_aerglow_forest",
-    "deep_aether:mystic_aerglow_forest",
-    "deep_aether:golden_heights",
-    "deep_aether:golden_grove",
-    "deep_aether:yagroot_swamp",
-    "deep_aether:aerlavender_fields",
-    "deep_aether:cloud",
-    "deep_aether:luminescent_forest",
-    "deep_aether:overgrown_cloud",
-    "deep_aether:sacred_lands",
-];
-
-/** Vanilla tree placed features to strip after DT feature cancellers (NeoForge REMOVE phase). */
-const VANILLA_TREE_PLACED_FEATURES = [
+/** Aether tree / island placed features to strip after DT feature cancellers (NeoForge REMOVE phase). */
+const AETHER_TREE_PLACED_FEATURES = [
     "aether:skyroot_forest_trees",
     "aether:skyroot_grove_trees",
     "aether:skyroot_meadow_trees",
     "aether:skyroot_woodland_trees",
     "aether:holiday_tree",
     "aether:crystal_island",
+];
+
+/**
+ * Deep Aether tree placed features to strip when that mod is loaded.
+ * Deep Aether biomes are already in #aether:is_aether, so do not re-add crystal islands there.
+ */
+const DEEP_AETHER_TREE_PLACED_FEATURES = [
     "deep_aether:aerglow_forest_trees_placement",
     "deep_aether:blue_aerglow_forest_trees_placement",
     "deep_aether:mystic_aerglow_forest_trees_placement",
@@ -290,6 +283,13 @@ const VANILLA_TREE_PLACED_FEATURES = [
     "deep_aether:aercloud_trees",
     "deep_aether:luminescent_skyroot_forest_trees",
     "deep_aether:overgrown_cloud_mushroom_trees",
+];
+
+const DEEP_AETHER_MOD_CONDITION = [
+    {
+        type: "neoforge:mod_loaded",
+        modid: "deep_aether",
+    },
 ];
 
 /** Same placement as vanilla {@code aether:crystal_island}; feature body is DT Java. */
@@ -1359,20 +1359,22 @@ writeJson(join(outRoot, "trees", TREE_NS, "world_gen", "feature_cancellers.json"
     },
 ]);
 
-const VANILLA_TREE_REMOVAL_STEPS = ["vegetal_decoration", "top_layer_modification"];
+const AETHER_TREE_REMOVAL_STEPS = ["vegetal_decoration", "top_layer_modification"];
 
 writeJson(join(outRoot, "data", TREE_NS, "neoforge", "biome_modifier", "remove_vanilla_trees.json"), {
     type: "neoforge:remove_features",
     biomes: "#aether:is_aether",
-    features: VANILLA_TREE_PLACED_FEATURES,
-    steps: VANILLA_TREE_REMOVAL_STEPS,
+    features: AETHER_TREE_PLACED_FEATURES,
+    steps: AETHER_TREE_REMOVAL_STEPS,
 });
 
+// Deep Aether biomes are tagged #aether:is_aether; only strip DA-specific tree features here.
 writeJson(join(outRoot, "data", TREE_NS, "neoforge", "biome_modifier", "remove_deep_aether_trees.json"), {
+    "neoforge:conditions": DEEP_AETHER_MOD_CONDITION,
     type: "neoforge:remove_features",
-    biomes: DEEP_AETHER_TREE_BIOMES,
-    features: VANILLA_TREE_PLACED_FEATURES,
-    steps: VANILLA_TREE_REMOVAL_STEPS,
+    biomes: "#aether:is_aether",
+    features: DEEP_AETHER_TREE_PLACED_FEATURES,
+    steps: ["vegetal_decoration"],
 });
 
 writeJson(join(outRoot, "data", TREE_NS, "worldgen", "configured_feature", "skyroot_trees.json"), {
@@ -1385,12 +1387,16 @@ for (const entry of SKYROOT_DT_PLACEMENTS) {
         feature: `${TREE_NS}:skyroot_trees`,
         placement: entry.placement,
     });
-    writeJson(join(outRoot, "data", TREE_NS, "neoforge", "biome_modifier", `add_${entry.id}.json`), {
+    const addModifier = {
         type: "neoforge:add_features",
         biomes: entry.biome,
         features: `${TREE_NS}:${entry.id}`,
         step: "vegetal_decoration",
-    });
+    };
+    if (String(entry.biome).startsWith("deep_aether:")) {
+        addModifier["neoforge:conditions"] = DEEP_AETHER_MOD_CONDITION;
+    }
+    writeJson(join(outRoot, "data", TREE_NS, "neoforge", "biome_modifier", `add_${entry.id}.json`), addModifier);
 }
 
 writeJson(join(outRoot, "data", TREE_NS, "worldgen", "configured_feature", "crystal_island.json"), {
@@ -1401,15 +1407,11 @@ writeJson(join(outRoot, "data", TREE_NS, "worldgen", "placed_feature", "crystal_
     feature: `${TREE_NS}:crystal_island`,
     placement: CRYSTAL_ISLAND_PLACEMENT,
 });
+// Covers Aether + Deep Aether (DA biomes are in #aether:is_aether). Do not add a second modifier
+// with the same placed feature — that creates a feature-order cycle.
 writeJson(join(outRoot, "data", TREE_NS, "neoforge", "biome_modifier", "add_crystal_island.json"), {
     type: "neoforge:add_features",
     biomes: "#aether:is_aether",
-    features: `${TREE_NS}:crystal_island`,
-    step: "top_layer_modification",
-});
-writeJson(join(outRoot, "data", TREE_NS, "neoforge", "biome_modifier", "add_crystal_island_deep_aether.json"), {
-    type: "neoforge:add_features",
-    biomes: DEEP_AETHER_TREE_BIOMES,
     features: `${TREE_NS}:crystal_island`,
     step: "top_layer_modification",
 });
