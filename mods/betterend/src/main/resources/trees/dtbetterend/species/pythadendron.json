@@ -1,0 +1,35 @@
+{
+  "family": "dtbetterend:pythadendron",
+  "tapering": 0.5,
+  "signal_energy": 64,
+  "up_probability": 2,
+  "lowest_branch_height": 3,
+  "growth_rate": 1.5,
+  "growth_logic_kit": "dtbetterend:pythadendron",
+  "leaves_properties": "dtbetterend:pythadendron",
+  "environment_factors": {
+    "is_end": 1.05,
+    "is_overworld": 0.95
+  },
+  "perfect_biomes": {
+    "name": "betterend:chorus_forest"
+  },
+  "acceptable_soils": [
+    "chorus_nylium"
+  ],
+  "world_gen_acceptable_soils": [
+    "chorus_nylium"
+  ],
+  "primitive_sapling": "betterend:pythadendron_sapling",
+  "primitive_saplings": [
+    "betterend:pythadendron_sapling"
+  ],
+  "generate_seed": true,
+  "generate_sapling": true,
+  "drop_seeds": true,
+  "features": [
+    "roots",
+    "mound",
+    "clear_volume"
+  ]
+}

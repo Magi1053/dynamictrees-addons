@@ -1,0 +1,35 @@
+{
+  "family": "dtbetterend:lacugrove",
+  "tapering": 0.6,
+  "signal_energy": 80,
+  "up_probability": 2,
+  "lowest_branch_height": 3,
+  "growth_rate": 1.5,
+  "growth_logic_kit": "dtbetterend:lacugrove",
+  "leaves_properties": "dtbetterend:lacugrove",
+  "environment_factors": {
+    "is_end": 1.05,
+    "is_overworld": 0.95
+  },
+  "perfect_biomes": {
+    "name": "betterend:megalake_grove"
+  },
+  "acceptable_soils": [
+    "moss_or_dust"
+  ],
+  "world_gen_acceptable_soils": [
+    "moss_or_dust"
+  ],
+  "primitive_sapling": "betterend:lacugrove_sapling",
+  "primitive_saplings": [
+    "betterend:lacugrove_sapling"
+  ],
+  "generate_seed": true,
+  "generate_sapling": true,
+  "drop_seeds": true,
+  "features": [
+    "roots",
+    "mound",
+    "clear_volume"
+  ]
+}

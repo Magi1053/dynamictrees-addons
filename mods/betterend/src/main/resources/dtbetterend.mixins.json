@@ -1,0 +1,13 @@
+{
+    "required": true,
+    "package": "com.skcraft.dtbetterend.mixin",
+    "compatibilityLevel": "JAVA_21",
+    "mixins": [
+        "MixinTenaneaBushFeature"
+    ],
+    "client": [],
+    "injectors": {
+        "defaultRequire": 1
+    },
+    "minVersion": "0.8"
+}

@@ -12,7 +12,7 @@ pluginManagement {
 
 rootProject.name = 'dynamictrees-addons'
 
-['aether', 'vinery', 'meadow', 'rubber', 'spectrum'].each { name ->
+['aether', 'vinery', 'meadow', 'rubber', 'spectrum', 'betterend'].each { name ->
     include name
     project(":$name").projectDir = file("mods/$name")
 }

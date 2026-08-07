@@ -1,0 +1,12 @@
+[
+  {
+    "__comment": "Cancel BetterEnd static tree/bush features in End biomes for Dynamic Trees.",
+    "select": {
+      "name": "betterend:.*",
+      "tag": "#minecraft:is_end"
+    },
+    "cancellers": {
+      "type": "dtbetterend:betterend_tree"
+    }
+  }
+]

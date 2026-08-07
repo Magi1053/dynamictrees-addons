@@ -16,6 +16,7 @@ on:
           - meadow
           - rubber
           - spectrum
+          - betterend
 
 jobs:
   sync:
@@ -23,7 +24,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        module: ${{ github.event.inputs.module == 'all' && fromJson('["aether","vinery","meadow","rubber","spectrum"]') || fromJson(format('["{0}"]', github.event.inputs.module)) }}
+        module: ${{ github.event.inputs.module == 'all' && fromJson('["aether","vinery","meadow","rubber","spectrum","betterend"]') || fromJson(format('["{0}"]', github.event.inputs.module)) }}
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-java@v5

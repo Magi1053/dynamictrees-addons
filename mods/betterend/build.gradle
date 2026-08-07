@@ -1,0 +1,22 @@
+plugins {
+    id 'java-library'
+    id 'net.neoforged.moddev'
+    id 'com.modrinth.minotaur'
+}
+
+dependencies {
+    compileOnly 'maven.modrinth:dynamictrees:1.7.2'
+    compileOnly 'maven.modrinth:emi:1.1.24+1.21.1+neoforge'
+    compileOnly 'maven.modrinth:betterend-neoforge:21.0.30'
+
+    runtimeOnly 'maven.modrinth:dynamictrees:1.7.2'
+    runtimeOnly 'maven.modrinth:betterend-neoforge:21.0.30'
+}
+
+modrinth {
+    dependencies {
+        required.project 'dynamictrees'
+        required.project 'betterend-neoforge'
+        optional.project 'emi'
+    }
+}

@@ -1,0 +1,67 @@
+name: Create BetterEnd Modrinth Project
+
+on:
+  workflow_dispatch:
+
+jobs:
+  create:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Create Modrinth project if missing
+        env:
+          MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "${MODRINTH_TOKEN:-}" ]; then
+            echo "MODRINTH_TOKEN missing"
+            exit 1
+          fi
+          UA="skcraft-dynamictrees-addons (github.com/Magi1053/dynamictrees-addons)"
+          EXISTING_CODE=$(curl -sS -o /tmp/existing.json -w "%{http_code}" \
+            -H "Authorization: ${MODRINTH_TOKEN}" \
+            -H "User-Agent: ${UA}" \
+            "https://api.modrinth.com/v2/project/dtbetterend" || true)
+          if [ "$EXISTING_CODE" = "200" ]; then
+            PROJECT_ID=$(jq -r .id /tmp/existing.json)
+            echo "Project already exists: $PROJECT_ID"
+          else
+            jq -n \
+              --arg body "$(cat mods/betterend/README.md)" \
+              '{
+                slug: "dtbetterend",
+                title: "Dynamic Trees for BetterEnd",
+                description: "Dynamic Trees compatibility for BetterEnd End trees.",
+                categories: ["worldgen","adventure","game-mechanics"],
+                client_side: "required",
+                server_side: "required",
+                body: $body,
+                status: "draft",
+                requested_status: "unlisted",
+                project_type: "mod",
+                license_id: "MIT",
+                is_draft: true,
+                initial_versions: [],
+                source_url: "https://github.com/Magi1053/dynamictrees-addons/tree/main/mods/betterend",
+                issues_url: "https://github.com/Magi1053/dynamictrees-addons/issues"
+              }' > /tmp/project.json
+            curl -fsSL -X POST "https://api.modrinth.com/v2/project" \
+              -H "Authorization: ${MODRINTH_TOKEN}" \
+              -H "User-Agent: ${UA}" \
+              -F "data=@/tmp/project.json;type=application/json" \
+              -o /tmp/created.json
+            cat /tmp/created.json
+            PROJECT_ID=$(jq -r .id /tmp/created.json)
+          fi
+          echo "PROJECT_ID=$PROJECT_ID" >> "$GITHUB_ENV"
+      - name: Write project id into gradle.properties
+        shell: bash
+        run: |
+          set -euo pipefail
+          sed -i "s/^modrinth_project_id=.*/modrinth_project_id=${PROJECT_ID}/" mods/betterend/gradle.properties
+          grep '^modrinth_project_id=' mods/betterend/gradle.properties
+      - uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore(betterend): set Modrinth project id"
+          file_pattern: mods/betterend/gradle.properties

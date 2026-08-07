@@ -8,6 +8,8 @@ run/
 
 # Local compile jars
 libs/
+artifacts/
+.tmp/
 
 # JVM / Gradle noise
 *.log
