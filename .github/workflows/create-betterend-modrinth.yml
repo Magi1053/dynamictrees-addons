@@ -2,6 +2,11 @@ name: Create BetterEnd Modrinth Project
 
 on:
   workflow_dispatch:
+    inputs:
+      project_id:
+        description: "Optional existing Modrinth project id (skips create)"
+        required: false
+        type: string
 
 jobs:
   create:
@@ -11,6 +16,7 @@ jobs:
       - name: Create Modrinth project if missing
         env:
           MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
+          INPUT_PROJECT_ID: ${{ inputs.project_id }}
         shell: bash
         run: |
           set -euo pipefail
@@ -19,40 +25,73 @@ jobs:
             exit 1
           fi
           UA="skcraft-dynamictrees-addons (github.com/Magi1053/dynamictrees-addons)"
-          EXISTING_CODE=$(curl -sS -o /tmp/existing.json -w "%{http_code}" \
-            -H "Authorization: ${MODRINTH_TOKEN}" \
+          auth_hdr() { printf 'Authorization: %s' "$MODRINTH_TOKEN"; }
+
+          echo "Validating token via GET /user ..."
+          USER_CODE=$(curl -sS -o /tmp/user.json -w "%{http_code}" \
+            -H "$(auth_hdr)" \
             -H "User-Agent: ${UA}" \
-            "https://api.modrinth.com/v2/project/dtbetterend" || true)
-          if [ "$EXISTING_CODE" = "200" ]; then
-            PROJECT_ID=$(jq -r .id /tmp/existing.json)
-            echo "Project already exists: $PROJECT_ID"
+            "https://api.modrinth.com/v2/user" || true)
+          echo "GET /user -> HTTP $USER_CODE"
+          cat /tmp/user.json || true
+          echo
+          if [ "$USER_CODE" != "200" ]; then
+            echo "Token is invalid for GET /user. Re-create MODRINTH_TOKEN."
+            exit 1
+          fi
+          echo "Authenticated as $(jq -r .username /tmp/user.json)"
+
+          if [ -n "${INPUT_PROJECT_ID:-}" ]; then
+            PROJECT_ID="$INPUT_PROJECT_ID"
+            echo "Using workflow input project id: $PROJECT_ID"
           else
-            jq -n \
-              --arg body "$(cat mods/betterend/README.md)" \
-              '{
-                slug: "dtbetterend",
-                title: "Dynamic Trees for BetterEnd",
-                description: "Dynamic Trees compatibility for BetterEnd End trees.",
-                categories: ["worldgen","adventure","game-mechanics"],
-                client_side: "required",
-                server_side: "required",
-                body: $body,
-                status: "draft",
-                requested_status: "unlisted",
-                project_type: "mod",
-                license_id: "MIT",
-                is_draft: true,
-                initial_versions: [],
-                source_url: "https://github.com/Magi1053/dynamictrees-addons/tree/main/mods/betterend",
-                issues_url: "https://github.com/Magi1053/dynamictrees-addons/issues"
-              }' > /tmp/project.json
-            curl -fsSL -X POST "https://api.modrinth.com/v2/project" \
-              -H "Authorization: ${MODRINTH_TOKEN}" \
+            EXISTING_CODE=$(curl -sS -o /tmp/existing.json -w "%{http_code}" \
+              -H "$(auth_hdr)" \
               -H "User-Agent: ${UA}" \
-              -F "data=@/tmp/project.json;type=application/json" \
-              -o /tmp/created.json
-            cat /tmp/created.json
-            PROJECT_ID=$(jq -r .id /tmp/created.json)
+              "https://api.modrinth.com/v2/project/dtbetterend" || true)
+            echo "GET /project/dtbetterend -> HTTP $EXISTING_CODE"
+            if [ "$EXISTING_CODE" = "200" ]; then
+              PROJECT_ID=$(jq -r .id /tmp/existing.json)
+              echo "Project already exists: $PROJECT_ID"
+            else
+              jq -n \
+                --arg body "$(cat mods/betterend/README.md)" \
+                '{
+                  slug: "dtbetterend",
+                  title: "Dynamic Trees for BetterEnd",
+                  description: "Dynamic Trees compatibility for BetterEnd End trees.",
+                  categories: ["worldgen","adventure","game-mechanics"],
+                  client_side: "required",
+                  server_side: "required",
+                  body: $body,
+                  status: "draft",
+                  requested_status: "unlisted",
+                  project_type: "mod",
+                  license_id: "MIT",
+                  is_draft: true,
+                  initial_versions: [],
+                  source_url: "https://github.com/Magi1053/dynamictrees-addons/tree/main/mods/betterend",
+                  issues_url: "https://github.com/Magi1053/dynamictrees-addons/issues"
+                }' > /tmp/project.json
+              CREATE_CODE=$(curl -sS -o /tmp/created.json -w "%{http_code}" -X POST \
+                "https://api.modrinth.com/v2/project" \
+                -H "$(auth_hdr)" \
+                -H "User-Agent: ${UA}" \
+                -F "data=@/tmp/project.json;type=application/json" || true)
+              echo "POST /project -> HTTP $CREATE_CODE"
+              cat /tmp/created.json || true
+              echo
+              if [ "$CREATE_CODE" != "200" ]; then
+                echo "::error::Modrinth project create failed (HTTP $CREATE_CODE)."
+                echo "PAT needs PROJECT_CREATE (and usually PROJECT_WRITE). Or create the project in the Modrinth UI under Viberanium, then re-run this workflow with project_id filled in."
+                exit 1
+              fi
+              PROJECT_ID=$(jq -r .id /tmp/created.json)
+            fi
+          fi
+          if [ -z "$PROJECT_ID" ] || [ "$PROJECT_ID" = "null" ]; then
+            echo "PROJECT_ID empty"
+            exit 1
           fi
           echo "PROJECT_ID=$PROJECT_ID" >> "$GITHUB_ENV"
       - name: Write project id into gradle.properties
