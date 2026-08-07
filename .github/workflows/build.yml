@@ -28,7 +28,7 @@ jobs:
         id: build
         run: |
           chmod +x gradlew
-          ./gradlew -p "mods/${{ matrix.module }}" build --no-daemon
+          ./gradlew ":${{ matrix.module }}:build" --no-daemon
           MOD_ID=$(grep -m1 '^mod_id=' "mods/${{ matrix.module }}/gradle.properties" | cut -d= -f2)
           MOD_VERSION=$(grep -m1 '^mod_version=' "mods/${{ matrix.module }}/gradle.properties" | cut -d= -f2)
           JAR="mods/${{ matrix.module }}/build/libs/${MOD_ID}-${MOD_VERSION}.jar"

@@ -46,6 +46,12 @@ jobs:
             exit 1
           fi
           MOD_ID=$(grep -m1 '^mod_id=' "mods/$MODULE/gradle.properties" | cut -d= -f2)
+
+          if ! grep -qE "^## ${VERSION}( |$)" "mods/$MODULE/CHANGELOG.md"; then
+            echo "mods/$MODULE/CHANGELOG.md is missing a '## $VERSION' section for the Modrinth version changelog"
+            exit 1
+          fi
+
           echo "module=$MODULE" >> "$GITHUB_OUTPUT"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "mod_id=$MOD_ID" >> "$GITHUB_OUTPUT"
@@ -59,7 +65,7 @@ jobs:
             exit 1
           fi
           chmod +x gradlew
-          ./gradlew -p "mods/${{ steps.meta.outputs.module }}" build modrinth modrinthSyncBody --no-daemon
+          ./gradlew ":${{ steps.meta.outputs.module }}:build" ":${{ steps.meta.outputs.module }}:modrinth" ":${{ steps.meta.outputs.module }}:modrinthSyncBody" --no-daemon
           JAR="mods/${{ steps.meta.outputs.module }}/build/libs/${{ steps.meta.outputs.mod_id }}-${{ steps.meta.outputs.version }}.jar"
           test -f "$JAR"
           echo "jar=$JAR" >> "$GITHUB_OUTPUT"

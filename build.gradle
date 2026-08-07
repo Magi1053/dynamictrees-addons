@@ -1,0 +1,119 @@
+// Shared setup for all mods/* subprojects.
+// Each module build.gradle only adds plugins, dependencies, and Modrinth dependency edges.
+
+static String changelogSection(File file, String version) {
+    if (!file.exists()) {
+        throw new GradleException("Missing CHANGELOG.md for version ${version}")
+    }
+    def lines = file.readLines('UTF-8')
+    def header = "## ${version}"
+    def start = lines.findIndexOf { it.trim() == header || it.trim().startsWith("${header} ") }
+    if (start < 0) {
+        throw new GradleException("CHANGELOG.md needs a '${header}' section")
+    }
+    def end = lines.findIndexOf(start + 1) { it.trim().startsWith('## ') }
+    def body = lines.subList(start + 1, end < 0 ? lines.size() : end).join('\n').trim()
+    if (!body) {
+        throw new GradleException("CHANGELOG.md '${header}' section is empty")
+    }
+    return body
+}
+
+subprojects { Project sub ->
+    sub.pluginManager.withPlugin('java-library') {
+        sub.version = sub.findProperty('mod_version')
+        sub.group = sub.findProperty('mod_group_id')
+        sub.base.archivesName = sub.findProperty('mod_id')
+        sub.java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+
+        sub.tasks.register('generateResources', Exec) {
+            workingDir sub.layout.projectDirectory
+            commandLine 'node', 'build.mjs'
+            onlyIf { sub.file('build.mjs').exists() }
+        }
+
+        sub.repositories {
+            maven {
+                name = 'Modrinth'
+                url = 'https://api.modrinth.com/maven'
+            }
+        }
+
+        sub.dependencies {
+            def localLibs = sub.file('libs')
+            if (localLibs.exists()) {
+                localLibs.eachFileMatch(~/.*\.jar/) { jarFile ->
+                    compileOnly sub.files(jarFile)
+                }
+            }
+        }
+
+        sub.tasks.withType(JavaCompile).configureEach {
+            options.encoding = 'UTF-8'
+        }
+
+        sub.tasks.named('jar', Jar).configure {
+            manifest.attributes([
+                    'Implementation-Title'  : sub.findProperty('mod_name'),
+                    'Implementation-Version': sub.findProperty('mod_version'),
+            ])
+        }
+    }
+
+    sub.pluginManager.withPlugin('net.neoforged.moddev') {
+        sub.neoForge {
+            version = sub.findProperty('neo_version')
+            parchment {
+                mappingsVersion = sub.findProperty('parchment_mappings_version')
+                minecraftVersion = sub.findProperty('parchment_minecraft_version')
+            }
+        }
+
+        def generateModMetadata = sub.tasks.register('generateModMetadata', ProcessResources) {
+            def replaceProperties = [
+                    minecraft_version      : sub.findProperty('minecraft_version'),
+                    minecraft_version_range: sub.findProperty('minecraft_version_range'),
+                    neo_version            : sub.findProperty('neo_version'),
+                    loader_version_range   : sub.findProperty('loader_version_range'),
+                    mod_id                 : sub.findProperty('mod_id'),
+                    mod_name               : sub.findProperty('mod_name'),
+                    mod_license            : sub.findProperty('mod_license'),
+                    mod_version            : sub.findProperty('mod_version'),
+                    mod_authors            : sub.findProperty('mod_authors'),
+                    mod_description        : sub.findProperty('mod_description'),
+                    mod_homepage           : sub.findProperty('mod_homepage'),
+                    mod_issues             : sub.findProperty('mod_issues'),
+            ]
+            inputs.properties replaceProperties
+            expand replaceProperties
+            from 'src/main/templates'
+            into 'build/generated/sources/modMetadata'
+        }
+
+        sub.sourceSets.main.resources.srcDir generateModMetadata
+        sub.neoForge.ideSyncTask generateModMetadata
+    }
+
+    sub.pluginManager.withPlugin('com.modrinth.minotaur') {
+        sub.modrinth {
+            token = System.getenv('MODRINTH_TOKEN') ?: ''
+            projectId = sub.findProperty('modrinth_project_id') ?: ''
+            versionNumber = sub.findProperty('mod_version')
+            versionName = "${sub.findProperty('mod_name')} ${sub.findProperty('mod_version')}"
+            versionType = 'release'
+            uploadFile = sub.tasks.named('jar')
+            gameVersions = [sub.findProperty('minecraft_version')]
+            loaders = ['neoforge']
+            syncBodyFrom = sub.file('README.md').getText('UTF-8')
+        }
+
+        sub.tasks.named('modrinth').configure {
+            finalizedBy 'modrinthSyncBody'
+        }
+
+        sub.afterEvaluate {
+            def version = sub.findProperty('mod_version') as String
+            sub.extensions.modrinth.changelog.set(changelogSection(sub.file('CHANGELOG.md'), version))
+        }
+    }
+}

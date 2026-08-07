@@ -1,62 +1,7 @@
 plugins {
     id 'java-library'
-    id 'net.neoforged.moddev' version '2.0.113'
-    id 'com.modrinth.minotaur' version '2.9.0'
-}
-
-version = mod_version
-group = mod_group_id
-
-base {
-    archivesName = mod_id
-}
-
-java.toolchain.languageVersion = JavaLanguageVersion.of(21)
-
-neoForge {
-    version = project.neo_version
-
-    parchment {
-        mappingsVersion = project.parchment_mappings_version
-        minecraftVersion = project.parchment_minecraft_version
-    }
-}
-
-tasks.register('generateResources', Exec) {
-    workingDir layout.projectDirectory
-    commandLine 'node', 'build.mjs'
-    onlyIf { file('build.mjs').exists() }
-}
-
-var generateModMetadata = tasks.register('generateModMetadata', ProcessResources) {
-    var replaceProperties = [
-            minecraft_version      : minecraft_version,
-            minecraft_version_range: minecraft_version_range,
-            neo_version            : neo_version,
-            loader_version_range   : loader_version_range,
-            mod_id                 : mod_id,
-            mod_name               : mod_name,
-            mod_license            : mod_license,
-            mod_version            : mod_version,
-            mod_authors            : mod_authors,
-            mod_description        : mod_description,
-            mod_homepage           : mod_homepage,
-            mod_issues             : mod_issues,
-    ]
-    inputs.properties replaceProperties
-    expand replaceProperties
-    from 'src/main/templates'
-    into 'build/generated/sources/modMetadata'
-}
-
-sourceSets.main.resources.srcDir generateModMetadata
-neoForge.ideSyncTask generateModMetadata
-
-repositories {
-    maven {
-        name = 'Modrinth'
-        url = 'https://api.modrinth.com/maven'
-    }
+    id 'net.neoforged.moddev'
+    id 'com.modrinth.minotaur'
 }
 
 dependencies {
@@ -64,46 +9,13 @@ dependencies {
     compileOnly 'maven.modrinth:emi:1.1.24+1.21.1+neoforge'
     compileOnly 'maven.modrinth:revelationary:1.5.0+1.21.1'
     compileOnly 'maven.modrinth:spectrum:1.11.9-1.21.1-neo'
-    def localLibs = file('libs')
-    if (localLibs.exists()) {
-        localLibs.eachFileMatch(~/.*\.jar/) { jarFile ->
-            compileOnly files(jarFile)
-        }
-    }
-}
-
-tasks.withType(JavaCompile).configureEach {
-    options.encoding = 'UTF-8'
-}
-
-tasks.named('jar', Jar).configure {
-    manifest {
-        attributes([
-                'Implementation-Title'  : mod_name,
-                'Implementation-Version': mod_version,
-        ])
-    }
 }
 
 modrinth {
-    token = System.getenv('MODRINTH_TOKEN') ?: ''
-    projectId = findProperty('modrinth_project_id') ?: ''
-    versionNumber = mod_version
-    versionName = "${mod_name} ${mod_version}"
-    versionType = 'release'
-    uploadFile = jar
-    gameVersions = [minecraft_version]
-    loaders = ['neoforge']
-    syncBodyFrom = file('README.md').getText('UTF-8')
-    changelog = file('CHANGELOG.md').exists() ? file('CHANGELOG.md').getText('UTF-8') : "Release ${mod_version}"
     dependencies {
         required.project 'dynamictrees'
         required.project 'spectrum'
         required.project 'revelationary'
         optional.project 'emi'
     }
-}
-
-tasks.named('modrinth').configure {
-    finalizedBy 'modrinthSyncBody'
 }

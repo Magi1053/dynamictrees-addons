@@ -1,113 +1,53 @@
 plugins {
     id 'java-library'
-    id 'net.neoforged.moddev' version '2.0.113'
-    id 'com.modrinth.minotaur' version '2.9.0'
+    id 'net.neoforged.moddev'
+    id 'com.modrinth.minotaur'
 }
-
-version = mod_version
-group = mod_group_id
-
-base {
-    archivesName = mod_id
-}
-
-java.toolchain.languageVersion = JavaLanguageVersion.of(21)
 
 neoForge {
-    version = project.neo_version
-
-    parchment {
-        mappingsVersion = project.parchment_mappings_version
-        minecraftVersion = project.parchment_minecraft_version
-    }
-
     mods {
         dtaether {
             sourceSet sourceSets.main
         }
     }
-}
 
-tasks.register('generateResources', Exec) {
-    workingDir layout.projectDirectory
-    commandLine 'node', 'build.mjs'
-    onlyIf { file('build.mjs').exists() }
-}
-
-var generateModMetadata = tasks.register('generateModMetadata', ProcessResources) {
-    var replaceProperties = [
-            minecraft_version      : minecraft_version,
-            minecraft_version_range: minecraft_version_range,
-            neo_version            : neo_version,
-            loader_version_range   : loader_version_range,
-            mod_id                 : mod_id,
-            mod_name               : mod_name,
-            mod_license            : mod_license,
-            mod_version            : mod_version,
-            mod_authors            : mod_authors,
-            mod_description        : mod_description,
-            mod_homepage           : mod_homepage,
-            mod_issues             : mod_issues,
-    ]
-    inputs.properties replaceProperties
-    expand replaceProperties
-    from 'src/main/templates'
-    into 'build/generated/sources/modMetadata'
-}
-
-sourceSets.main.resources.srcDir generateModMetadata
-neoForge.ideSyncTask generateModMetadata
-
-repositories {
-    maven {
-        name = 'Modrinth'
-        url = 'https://api.modrinth.com/maven'
+    runs {
+        client {
+            client()
+            systemProperty 'forge.logging.console.level', 'info'
+            if (findProperty('smokeQuickPlay')) {
+                programArgument '--quickPlaySingleplayer'
+                programArgument smokeQuickPlay.toString()
+            }
+        }
+        server {
+            server()
+            programArgument '--nogui'
+            systemProperty 'forge.logging.console.level', 'info'
+        }
     }
 }
 
 dependencies {
     compileOnly 'maven.modrinth:dynamictrees:1.7.2'
     compileOnly 'maven.modrinth:emi:1.1.24+1.21.1+neoforge'
-    def localLibs = file('libs')
-    if (localLibs.exists()) {
-        localLibs.eachFileMatch(~/.*\.jar/) { jarFile ->
-            compileOnly files(jarFile)
-        }
-    }
-}
 
-tasks.withType(JavaCompile).configureEach {
-    options.encoding = 'UTF-8'
-}
-
-tasks.named('jar', Jar).configure {
-    manifest {
-        attributes([
-                'Implementation-Title'  : mod_name,
-                'Implementation-Version': mod_version,
-        ])
+    // Dev client runtime. Accessories is top-level so Aether's JiJ copy does not break MDG runs.
+    runtimeOnly 'maven.modrinth:dynamictrees:1.7.2'
+    runtimeOnly 'maven.modrinth:aether:1.21.1-1.5.10-neoforge'
+    runtimeOnly 'maven.modrinth:owo-lib:0.12.15.5-beta.1+1.21'
+    runtimeOnly 'maven.modrinth:accessories:1.1.0-beta.53+1.21.1'
+    // Optional Deep Aether (JiJ brings NeoForge TerraBlender). Toggle: -PwithDeepAether=true|false
+    if (findProperty('withDeepAether') != 'false') {
+        runtimeOnly 'maven.modrinth:deep-aether:1.21.1-1.1.5.1'
     }
 }
 
 modrinth {
-    token = System.getenv('MODRINTH_TOKEN') ?: ''
-    projectId = findProperty('modrinth_project_id') ?: ''
-    versionNumber = mod_version
-    versionName = "${mod_name} ${mod_version}"
-    versionType = 'release'
-    uploadFile = jar
-    gameVersions = [minecraft_version]
-    loaders = ['neoforge']
-    syncBodyFrom = file('README.md').getText('UTF-8')
-    changelog = file('CHANGELOG.md').exists() ? file('CHANGELOG.md').getText('UTF-8') : "Release ${mod_version}"
     dependencies {
         required.project 'dynamictrees'
         required.project 'aether'
         optional.project 'deep-aether'
         optional.project 'emi'
     }
-}
-
-tasks.named('modrinth').configure {
-    finalizedBy 'modrinthSyncBody'
 }

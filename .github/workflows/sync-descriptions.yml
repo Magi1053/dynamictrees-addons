@@ -40,4 +40,4 @@ jobs:
             exit 1
           fi
           chmod +x gradlew
-          ./gradlew -p "mods/${{ matrix.module }}" modrinthSyncBody --no-daemon
+          ./gradlew ":${{ matrix.module }}:modrinthSyncBody" --no-daemon
