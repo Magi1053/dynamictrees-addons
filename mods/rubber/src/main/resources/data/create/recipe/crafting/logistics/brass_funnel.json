@@ -1,0 +1,30 @@
+{
+  "neoforge:conditions": [
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "create"
+    }
+  ],
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "A": {
+      "tag": "c:ingots/brass"
+    },
+    "E": {
+      "item": "create:electron_tube"
+    },
+    "K": {
+      "tag": "c:rubber"
+    }
+  },
+  "pattern": [
+    "E",
+    "A",
+    "K"
+  ],
+  "result": {
+    "count": 2,
+    "id": "create:brass_funnel"
+  }
+}

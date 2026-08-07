@@ -1,0 +1,8 @@
+{
+    "parent":"dynamictrees:block/smartmodel/sapling",
+    "textures":{
+        "particle":"vinery:block/apple_leaves_0",
+        "log":"vinery:block/apple_log_side",
+        "leaves":"vinery:block/apple_leaves_0"
+    }
+}

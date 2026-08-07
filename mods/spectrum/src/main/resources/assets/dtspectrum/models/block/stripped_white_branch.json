@@ -1,0 +1,7 @@
+{
+  "loader": "dynamictrees:branch",
+  "textures": {
+    "bark": "spectrum:block/stripped_white_log",
+    "rings": "spectrum:block/stripped_white_log_top"
+  }
+}

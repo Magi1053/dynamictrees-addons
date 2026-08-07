@@ -1,0 +1,7 @@
+{
+    "loader":"dynamictrees:branch",
+    "textures":{
+        "bark":"meadow:block/alpine_birch_log",
+        "rings":"meadow:block/alpine_birch_log_top"
+    }
+}

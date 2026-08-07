@@ -1,0 +1,8 @@
+{
+  "common_leaves": "dtvinery:apple",
+  "common_species": "dtvinery:apple",
+  "primitive_log": "vinery:apple_log",
+  "max_branch_radius": 8,
+  "generate_stripped_branch": false,
+  "primitive_stripped_log": "minecraft:stripped_oak_log"
+}

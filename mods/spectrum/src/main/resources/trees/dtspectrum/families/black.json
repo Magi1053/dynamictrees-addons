@@ -1,0 +1,7 @@
+{
+  "common_leaves": "dtspectrum:black",
+  "common_species": "dtspectrum:black",
+  "primitive_log": "spectrum:black_log",
+  "primitive_stripped_log": "spectrum:stripped_black_log",
+  "max_branch_radius": 8
+}

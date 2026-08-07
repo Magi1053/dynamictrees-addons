@@ -1,0 +1,7 @@
+{
+  "primitive_soil": "deep_aether:golden_heights_grass_block",
+  "acceptable_soils": [
+    "dirt_like"
+  ],
+  "only_if_loaded": "deep_aether"
+}

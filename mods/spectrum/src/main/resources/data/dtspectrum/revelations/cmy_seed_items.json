@@ -1,0 +1,16 @@
+{
+  "advancement": "spectrum:milestones/reveal_colored_saplings_cmy",
+  "items": {
+    "dtspectrum:blue_seed": "minecraft:oak_sapling",
+    "dtspectrum:cyan_seed": "minecraft:oak_sapling",
+    "dtspectrum:green_seed": "minecraft:oak_sapling",
+    "dtspectrum:light_blue_seed": "minecraft:oak_sapling",
+    "dtspectrum:lime_seed": "minecraft:oak_sapling",
+    "dtspectrum:magenta_seed": "minecraft:oak_sapling",
+    "dtspectrum:orange_seed": "minecraft:oak_sapling",
+    "dtspectrum:pink_seed": "minecraft:oak_sapling",
+    "dtspectrum:purple_seed": "minecraft:oak_sapling",
+    "dtspectrum:red_seed": "minecraft:oak_sapling",
+    "dtspectrum:yellow_seed": "minecraft:oak_sapling"
+  }
+}

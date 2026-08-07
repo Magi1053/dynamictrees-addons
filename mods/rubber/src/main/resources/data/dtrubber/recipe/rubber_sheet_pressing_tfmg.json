@@ -1,0 +1,23 @@
+{
+  "type": "create:pressing",
+  "neoforge:conditions": [
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "create"
+    },
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "tfmg"
+    }
+  ],
+  "ingredients": [
+    {
+      "item": "dtrubber:rubber_ball"
+    }
+  ],
+  "results": [
+    {
+      "id": "tfmg:rubber_sheet"
+    }
+  ]
+}

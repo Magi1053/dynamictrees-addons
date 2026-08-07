@@ -1,0 +1,8 @@
+{
+  "common_leaves": "dtaether:conberry",
+  "common_species": "dtaether:conberry",
+  "primitive_log": "deep_aether:conberry_log",
+  "primitive_stripped_log": "deep_aether:stripped_conberry_log",
+  "stick": "aether:skyroot_stick",
+  "max_branch_radius": 24
+}

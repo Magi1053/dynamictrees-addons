@@ -1,0 +1,13 @@
+[
+  {
+    "select": {
+      "tag": "#vinery:spawns_cherry_tree"
+    },
+    "cancellers": {
+      "type": "tree",
+      "namespaces": [
+        "vinery"
+      ]
+    }
+  }
+]

@@ -1,0 +1,10 @@
+{
+  "common_leaves": "dtrubber:rubber",
+  "common_species": "dtrubber:rubber",
+  "primitive_log": "dtrubber:rubber_log",
+  "primitive_stripped_log": "dtrubber:stripped_rubber_log",
+  "stick": "minecraft:stick",
+  "max_branch_radius": 7,
+  "generate_stripped_branch": true,
+  "min_radius_for_stripping": 1
+}

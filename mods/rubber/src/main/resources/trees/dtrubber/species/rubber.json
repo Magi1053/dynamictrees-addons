@@ -1,0 +1,33 @@
+{
+  "family": "dtrubber:rubber",
+  "tapering": 0.35,
+  "signal_energy": 9,
+  "up_probability": 2,
+  "lowest_branch_height": 3,
+  "growth_rate": 0.75,
+  "max_branch_radius": 7,
+  "leaves_properties": "dtrubber:rubber",
+  "preferred_climate": "tropical",
+  "climate_tolerance": 0.35,
+  "acceptable_soils": [
+    "dirt_like"
+  ],
+  "world_gen_acceptable_soils": [
+    "dirt_like"
+  ],
+  "generate_seed": true,
+  "generate_sapling": true,
+  "drop_seeds": true,
+  "features": [
+    {
+      "name": "clear_volume",
+      "properties": {
+        "height": 5
+      }
+    }
+  ],
+  "lang_overrides": {
+    "seed": "Rubber Seed",
+    "sapling": "Rubber Sapling"
+  }
+}

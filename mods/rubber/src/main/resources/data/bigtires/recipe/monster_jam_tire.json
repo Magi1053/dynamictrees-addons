@@ -1,0 +1,40 @@
+{
+  "neoforge:conditions": [
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "bigtires"
+    }
+  ],
+  "type": "create:mechanical_crafting",
+  "accept_mirrored": true,
+  "category": "misc",
+  "key": {
+    "I": {
+      "item": "create:industrial_iron_block"
+    },
+    "K": {
+      "tag": "c:rubber",
+      "count": 9
+    },
+    "S": {
+      "item": "create:shaft"
+    },
+    "D": {
+      "tag": "c:rubber"
+    },
+    "G": {
+      "item": "create:metal_girder"
+    }
+  },
+  "pattern": [
+    " DKD ",
+    "DGIGD",
+    "KISIK",
+    "DGIGD",
+    " DKD "
+  ],
+  "result": {
+    "count": 2,
+    "id": "bigtires:monster_jam_tire"
+  }
+}

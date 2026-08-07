@@ -1,0 +1,8 @@
+{
+  "common_leaves": "dtaether:blue_roseroot",
+  "common_species": "dtaether:blue_roseroot",
+  "primitive_log": "deep_aether:roseroot_log",
+  "primitive_stripped_log": "deep_aether:stripped_roseroot_log",
+  "stick": "aether:skyroot_stick",
+  "max_branch_radius": 24
+}

@@ -1,0 +1,36 @@
+# Gradle
+.gradle/
+**/build/
+
+# NeoForge
+runs/
+run/
+
+# Local compile jars
+libs/
+
+# JVM / Gradle noise
+*.log
+hs_err_pid*
+replay_pid*
+*.hprof
+*.jfr
+
+local.properties
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+out/
+.classpath
+.project
+.settings/
+bin/
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini

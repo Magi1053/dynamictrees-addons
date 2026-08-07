@@ -1,0 +1,7 @@
+{
+    "common_leaves":"dtvinery:dark_cherry",
+    "common_species":"dtvinery:dark_cherry",
+    "primitive_log":"vinery:dark_cherry_log",
+    "primitive_stripped_log":"vinery:stripped_dark_cherry_log",
+    "max_branch_radius":8
+}

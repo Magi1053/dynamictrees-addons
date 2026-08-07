@@ -1,0 +1,38 @@
+{
+  "type": "neoforge:remove_features",
+  "biomes": [
+    "deep_aether:aerglow_forest",
+    "deep_aether:blue_aerglow_forest",
+    "deep_aether:mystic_aerglow_forest",
+    "deep_aether:golden_heights",
+    "deep_aether:golden_grove",
+    "deep_aether:yagroot_swamp",
+    "deep_aether:aerlavender_fields",
+    "deep_aether:cloud",
+    "deep_aether:luminescent_forest",
+    "deep_aether:overgrown_cloud",
+    "deep_aether:sacred_lands"
+  ],
+  "features": [
+    "aether:skyroot_forest_trees",
+    "aether:skyroot_grove_trees",
+    "aether:skyroot_meadow_trees",
+    "aether:skyroot_woodland_trees",
+    "aether:holiday_tree",
+    "aether:crystal_island",
+    "deep_aether:aerglow_forest_trees_placement",
+    "deep_aether:blue_aerglow_forest_trees_placement",
+    "deep_aether:mystic_aerglow_forest_trees_placement",
+    "deep_aether:golden_heights_trees",
+    "deep_aether:golden_grove_trees",
+    "deep_aether:yagroot_swamp_trees_placement",
+    "deep_aether:aerlavender_field_trees",
+    "deep_aether:aercloud_trees",
+    "deep_aether:luminescent_skyroot_forest_trees",
+    "deep_aether:overgrown_cloud_mushroom_trees"
+  ],
+  "steps": [
+    "vegetal_decoration",
+    "top_layer_modification"
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "family": "dtmeadow:alpine_birch",
+  "tapering": 0.3,
+  "signal_energy": 10,
+  "up_probability": 4,
+  "lowest_branch_height": 4,
+  "growth_rate": 1.25,
+  "growth_logic_kit": {
+    "name": "conifer",
+    "properties": {
+      "energy_divisor": 3,
+      "horizontal_limiter": 3
+    }
+  },
+  "environment_factors": {
+    "cold": 0.75,
+    "hot": 0.5,
+    "dry": 0.5,
+    "forest": 1.05
+  },
+  "perfect_biomes": {
+    "tag": "#meadow:is_meadow"
+  },
+  "always_show_on_waila": false,
+  "generate_seed": false,
+  "generate_sapling": false,
+  "features": [
+    {
+      "name": "mushroom_rot",
+      "properties": {
+        "_comment": "An alternate mushroom chance of 2 means that a brown mushroom will always be generated.",
+        "alternate_mushroom_chance": 2
+      }
+    }
+  ],
+  "primitive_saplings": []
+}
