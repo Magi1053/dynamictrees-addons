@@ -32,6 +32,12 @@ Optional regenerate: `./gradlew -p mods/<name> generateResources` (module-specif
 3. Push and tag: `<module>/v<version>` (example: `rubber/v1.0.46`).
 4. GitHub Actions builds that module and runs Minotaur (`MODRINTH_TOKEN` secret).
 
+One-time setup:
+
+1. Create five Modrinth projects (one per module); paste each project ID into that module’s `modrinth_project_id`.
+2. Set the repo secret: `gh secret set MODRINTH_TOKEN` (token needs `CREATE_VERSION`).
+3. Optional: transfer this repo to the `SKCraft` GitHub org when create permissions allow.
+
 Modules version and publish independently — tagging one mod does not release the others.
 
 ## License
