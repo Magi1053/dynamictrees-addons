@@ -13,5 +13,6 @@
   "root_system_acceptable_soils": [
     "dirt_like",
     "mud_like"
-  ]
+  ],
+  "only_if_loaded": "deep_aether"
 }

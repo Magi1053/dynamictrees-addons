@@ -17,7 +17,7 @@ Bring **Dynamic Trees** into **The Aether** and **Deep Aether**. Static sky-isla
 - Golden Oak
 - Crystal Skyroot
 
-**Deep Aether**
+**Deep Aether** (optional — only when Deep Aether is installed)
 
 - Roseroot
 - Blue Roseroot
@@ -34,14 +34,14 @@ Bring **Dynamic Trees** into **The Aether** and **Deep Aether**. Static sky-isla
 | NeoForge | Yes |
 | [Dynamic Trees](https://modrinth.com/mod/dynamictrees) | Yes |
 | [The Aether](https://modrinth.com/mod/aether) | Yes |
-| [Deep Aether](https://modrinth.com/mod/deep-aether) | Yes |
+| [Deep Aether](https://modrinth.com/mod/deep-aether) | Optional (Deep Aether woods + biomes) |
 | [EMI](https://modrinth.com/mod/emi) | Optional (hides replaced saplings in EMI) |
 
 ## Notes
 
 - Designed for NeoForge 1.21.1 packs that already use Dynamic Trees in the Overworld.
 - Install alongside Dynamic Trees; this addon does not replace the base mod.
-- Deep Aether woods are included so mixed Aether + Deep Aether worlds stay consistent.
+- Without Deep Aether, only The Aether trees (skyroot, golden oak, crystal skyroot) load. Deep Aether species enable automatically when that mod is present.
 
 ## Links
 

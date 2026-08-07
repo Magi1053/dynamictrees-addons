@@ -42,7 +42,7 @@ side="BOTH"
 
 [[dependencies.${mod_id}]]
 modId="deep_aether"
-type="required"
+type="optional"
 versionRange="[1.0.0,)"
 ordering="AFTER"
 side="BOTH"

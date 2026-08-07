@@ -1,3 +1,4 @@
 {
-  "primitive_leaves": "deep_aether:roseroot_leaves"
+  "primitive_leaves": "deep_aether:roseroot_leaves",
+  "only_if_loaded": "deep_aether"
 }

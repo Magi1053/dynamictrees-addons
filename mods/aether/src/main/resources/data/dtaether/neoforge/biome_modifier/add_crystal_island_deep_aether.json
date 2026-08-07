@@ -1,4 +1,10 @@
 {
+  "neoforge:conditions": [
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "deep_aether"
+    }
+  ],
   "type": "neoforge:add_features",
   "biomes": [
     "deep_aether:aerglow_forest",
