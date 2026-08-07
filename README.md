@@ -35,8 +35,9 @@ Optional regenerate: `./gradlew -p mods/<name> generateResources` (module-specif
 One-time setup:
 
 1. Create five Modrinth projects (one per module); paste each project ID into that module’s `modrinth_project_id`.
-2. Set the repo secret: `gh secret set MODRINTH_TOKEN` (token needs `CREATE_VERSION`).
-3. Optional: transfer this repo to the `SKCraft` GitHub org when create permissions allow.
+2. Set the repo secret: `gh secret set MODRINTH_TOKEN` (scopes: `CREATE_VERSION` and `PROJECT_WRITE` for README → description sync).
+3. Each module `README.md` is the Modrinth long description; `modrinthSyncBody` runs on publish.
+4. Optional: transfer this repo to the `SKCraft` GitHub org when create permissions allow.
 
 Modules version and publish independently — tagging one mod does not release the others.
 

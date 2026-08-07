@@ -59,7 +59,7 @@ jobs:
             exit 1
           fi
           chmod +x gradlew
-          ./gradlew -p "mods/${{ steps.meta.outputs.module }}" build modrinth --no-daemon
+          ./gradlew -p "mods/${{ steps.meta.outputs.module }}" build modrinth modrinthSyncBody --no-daemon
           JAR="mods/${{ steps.meta.outputs.module }}/build/libs/${{ steps.meta.outputs.mod_id }}-${{ steps.meta.outputs.version }}.jar"
           test -f "$JAR"
           echo "jar=$JAR" >> "$GITHUB_OUTPUT"

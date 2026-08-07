@@ -93,9 +93,14 @@ modrinth {
     uploadFile = jar
     gameVersions = [minecraft_version]
     loaders = ['neoforge']
-    changelog = file('CHANGELOG.md').exists() ? file('CHANGELOG.md').text : "Release ${mod_version}"
+    syncBodyFrom = file('README.md').getText('UTF-8')
+    changelog = file('CHANGELOG.md').exists() ? file('CHANGELOG.md').getText('UTF-8') : "Release ${mod_version}"
     dependencies {
         required.project 'dynamictrees'
         optional.project 'emi'
     }
+}
+
+tasks.named('modrinth').configure {
+    finalizedBy 'modrinthSyncBody'
 }
