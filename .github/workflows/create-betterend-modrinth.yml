@@ -39,19 +39,8 @@ jobs:
             MODRINTH_TOKEN="${MODRINTH_TOKEN#Bearer }"
           fi
 
-          echo "Validating token via GET /user ..."
-          USER_CODE=$(curl -sS -o /tmp/user.json -w "%{http_code}" \
-            -H "Authorization: ${MODRINTH_TOKEN}" \
-            -H "User-Agent: ${UA}" \
-            "https://api.modrinth.com/v2/user" || true)
-          echo "GET /user -> HTTP $USER_CODE"
-          cat /tmp/user.json || true
-          echo
-          if [ "$USER_CODE" != "200" ]; then
-            echo "Token is invalid for GET /user. Re-create MODRINTH_TOKEN."
-            exit 1
-          fi
-          echo "Authenticated as $(jq -r .username /tmp/user.json)"
+          # Note: GET /user needs USER_READ; our publish PAT may only have VERSION_CREATE + PROJECT_WRITE.
+          # Skip /user validation and attempt create (needs PROJECT_CREATE) or accept an input project id.
 
           if [ -n "${INPUT_PROJECT_ID:-}" ]; then
             PROJECT_ID="$INPUT_PROJECT_ID"
