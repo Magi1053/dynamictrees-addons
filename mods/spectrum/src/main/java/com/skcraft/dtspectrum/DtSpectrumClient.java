@@ -22,7 +22,7 @@ import java.util.concurrent.Executor;
  * Re-applies revelation item/block cloaks after datapack reload.
  * Revelationary only calls {@link ClientRevelationHolder#cloakAll()} on login sync, not after /reload.
  */
-@EventBusSubscriber(modid = DtSpectrum.MOD_ID, bus = EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
+@EventBusSubscriber(modid = DtSpectrum.MOD_ID, value = Dist.CLIENT)
 public final class DtSpectrumClient {
     public static final PreparableReloadListener REVELATION_REFRESH_LISTENER = new PreparableReloadListener() {
         @Override
