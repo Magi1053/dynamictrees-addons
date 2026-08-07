@@ -25,8 +25,8 @@ jobs:
       matrix:
         module: [aether, vinery, meadow, rubber, spectrum]
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: "21"
@@ -35,7 +35,7 @@ jobs:
         run: |
           chmod +x gradlew
           ./gradlew -p "mods/${{ matrix.module }}" build --no-daemon
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.module }}-jar
           path: mods/${{ matrix.module }}/build/libs/*.jar
@@ -45,8 +45,8 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: "21"
@@ -80,7 +80,7 @@ jobs:
         run: |
           chmod +x gradlew
           ./gradlew -p "mods/${{ steps.meta.outputs.module }}" build modrinth --no-daemon
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: ${{ steps.meta.outputs.module }}-${{ steps.meta.outputs.version }}
           path: mods/${{ steps.meta.outputs.module }}/build/libs/*.jar
