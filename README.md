@@ -33,7 +33,7 @@ Player-facing details are in each module’s `README.md` (synced as the Modrinth
 
 Shared NeoForge / Minotaur config lives in the root `build.gradle`. Module scripts only declare dependencies (and aether’s run config).
 
-Release jars use committed `src/main/resources`. Optional `generateResources` (Node) is only needed when regenerating assets.
+Release jars are named `{mod_id}-neoforge-{mc}-{version}.jar` (example: `dtrubber-neoforge-1.21.1-1.0.45.jar`) and use committed `src/main/resources`. Optional `generateResources` (Node) is only needed when regenerating assets.
 
 ## Contributing
 

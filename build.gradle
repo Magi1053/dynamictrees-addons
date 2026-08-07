@@ -23,7 +23,7 @@ subprojects { Project sub ->
     sub.pluginManager.withPlugin('java-library') {
         sub.version = sub.findProperty('mod_version')
         sub.group = sub.findProperty('mod_group_id')
-        sub.base.archivesName = sub.findProperty('mod_id')
+        sub.base.archivesName = "${sub.findProperty('mod_id')}-neoforge-${sub.findProperty('minecraft_version')}"
         sub.java.toolchain.languageVersion = JavaLanguageVersion.of(21)
 
         sub.tasks.register('generateResources', Exec) {
