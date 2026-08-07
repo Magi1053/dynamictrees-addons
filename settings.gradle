@@ -1,0 +1,2 @@
+// Standalone modules under mods/* — build with: ./gradlew -p mods/<name> <task>
+rootProject.name = 'dynamictrees-addons'

@@ -1,0 +1,27 @@
+{
+  "type": "create:mixing",
+  "neoforge:conditions": [
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "create"
+    },
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "tfmg"
+    }
+  ],
+  "heat_requirement": "heated",
+  "ingredients": [
+    {
+      "item": "dtrubber:raw_latex"
+    },
+    {
+      "item": "tfmg:sulfur_dust"
+    }
+  ],
+  "results": [
+    {
+      "id": "dtrubber:coagulated_latex"
+    }
+  ]
+}

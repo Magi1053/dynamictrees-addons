@@ -1,0 +1,31 @@
+{
+  "type": "create:mixing",
+  "neoforge:conditions": [
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "create"
+    }
+  ],
+  "ingredients": [
+    {
+      "item": "dtrubber:raw_latex"
+    },
+    {
+      "item": "dtrubber:raw_latex"
+    },
+    {
+      "item": "dtrubber:raw_latex"
+    },
+    {
+      "item": "minecraft:charcoal"
+    },
+    {
+      "item": "minecraft:slime_ball"
+    }
+  ],
+  "results": [
+    {
+      "id": "dtrubber:coagulated_latex"
+    }
+  ]
+}

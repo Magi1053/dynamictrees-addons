@@ -1,0 +1,27 @@
+{
+  "neoforge:conditions": [
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "offroad"
+    }
+  ],
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "K": {
+      "tag": "c:rubber"
+    },
+    "S": {
+      "item": "create:shaft"
+    }
+  },
+  "pattern": [
+    " K ",
+    "KSK",
+    " K "
+  ],
+  "result": {
+    "count": 1,
+    "id": "offroad:tire"
+  }
+}

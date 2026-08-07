@@ -1,0 +1,7 @@
+{
+    "loader":"dynamictrees:branch",
+    "textures":{
+        "bark":"meadow:block/pine_log_side",
+        "rings":"meadow:block/pine_log_top"
+    }
+}

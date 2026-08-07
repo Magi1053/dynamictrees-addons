@@ -1,0 +1,7 @@
+{
+    "parent":"dynamictrees:item/branch",
+    "textures":{
+        "bark":"vinery:block/apple_log_side",
+        "rings":"vinery:block/apple_log_top"
+    }
+}

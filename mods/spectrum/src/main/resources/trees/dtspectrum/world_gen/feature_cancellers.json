@@ -1,0 +1,13 @@
+[
+  {
+    "select": {
+      "tag": "#spectrum:colored_trees_generating_in"
+    },
+    "cancellers": {
+      "type": "tree",
+      "namespaces": [
+        "spectrum"
+      ]
+    }
+  }
+]

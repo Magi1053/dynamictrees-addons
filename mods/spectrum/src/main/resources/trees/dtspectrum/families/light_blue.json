@@ -1,0 +1,7 @@
+{
+  "common_leaves": "dtspectrum:light_blue",
+  "common_species": "dtspectrum:light_blue",
+  "primitive_log": "spectrum:light_blue_log",
+  "primitive_stripped_log": "spectrum:stripped_light_blue_log",
+  "max_branch_radius": 8
+}

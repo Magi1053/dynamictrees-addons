@@ -1,0 +1,6 @@
+{
+  "type": "neoforge:add_features",
+  "biomes": "aether:skyroot_meadow",
+  "features": "dtaether:skyroot_meadow_trees",
+  "step": "vegetal_decoration"
+}

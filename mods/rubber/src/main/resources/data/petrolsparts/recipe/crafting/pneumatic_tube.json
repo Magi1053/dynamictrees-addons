@@ -1,0 +1,43 @@
+{
+  "neoforge:conditions": [
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "petrolsparts"
+    },
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "create"
+    },
+    {
+      "type": "petrolpark:config_bool",
+      "key": "petrolsparts:common.recipes.pneumaticTube"
+    }
+  ],
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "KMK",
+    "KPK",
+    "ICI"
+  ],
+  "key": {
+    "K": {
+      "tag": "c:rubber"
+    },
+    "M": {
+      "item": "create:precision_mechanism"
+    },
+    "P": {
+      "item": "create:propeller"
+    },
+    "C": {
+      "item": "create:cogwheel"
+    },
+    "I": {
+      "tag": "c:plates/iron"
+    }
+  },
+  "result": {
+    "id": "petrolsparts:pneumatic_tube",
+    "count": 8
+  }
+}

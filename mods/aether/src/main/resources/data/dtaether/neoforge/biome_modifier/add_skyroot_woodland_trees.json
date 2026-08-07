@@ -1,0 +1,6 @@
+{
+  "type": "neoforge:add_features",
+  "biomes": "aether:skyroot_woodland",
+  "features": "dtaether:skyroot_woodland_trees",
+  "step": "vegetal_decoration"
+}

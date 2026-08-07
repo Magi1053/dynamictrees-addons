@@ -1,0 +1,15 @@
+{
+  "type": "dtaether:aether_dt_tree",
+  "config": {
+    "species": [
+      {
+        "species": "dtaether:skyroot",
+        "weight": 99
+      },
+      {
+        "species": "dtaether:golden_oak",
+        "weight": 1
+      }
+    ]
+  }
+}

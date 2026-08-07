@@ -1,0 +1,12 @@
+{
+  "values": [
+    {
+      "id": "dtrubber:rubber_sheet",
+      "required": false
+    },
+    {
+      "id": "tfmg:rubber_sheet",
+      "required": false
+    }
+  ]
+}

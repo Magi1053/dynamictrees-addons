@@ -1,0 +1,30 @@
+{
+  "neoforge:conditions": [
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "bigtires"
+    }
+  ],
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "CDC",
+    "DSD",
+    "CDC"
+  ],
+  "key": {
+    "C": {
+      "item": "minecraft:sugar_cane"
+    },
+    "D": {
+      "tag": "c:rubber"
+    },
+    "S": {
+      "item": "create:shaft"
+    }
+  },
+  "result": {
+    "id": "bigtires:tractor_tire",
+    "count": 2
+  }
+}

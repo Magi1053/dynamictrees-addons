@@ -1,0 +1,16 @@
+{
+  "block.dtrubber.rubber_branch": "Rubber Branch",
+  "block.dtrubber.stripped_rubber_branch": "Stripped Rubber Branch",
+  "block.dtrubber.rubber_log": "Rubber Log",
+  "block.dtrubber.stripped_rubber_log": "Stripped Rubber Log",
+  "block.dtrubber.stripped_rubber_wood": "Stripped Rubber Wood",
+  "block.dtrubber.rubber_planks": "Rubber Planks",
+  "block.dtrubber.rubber_leaves": "Rubber Leaves",
+  "block.dtrubber.rubber_sapling": "Rubber Sapling",
+  "item.dtrubber.rubber_seed": "Rubber Seed",
+  "item.dtrubber.raw_latex": "Raw Latex",
+  "item.dtrubber.coagulated_latex": "Coagulated Latex",
+  "item.dtrubber.rubber_ball": "Rubber Ball",
+  "item.dtrubber.rubber_sheet": "Rubber Sheet",
+  "species.dtrubber.rubber": "Rubber Tree"
+}

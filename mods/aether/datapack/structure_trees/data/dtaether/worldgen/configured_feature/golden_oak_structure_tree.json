@@ -1,0 +1,11 @@
+{
+    "type": "dtaether:aether_dt_tree",
+    "config": {
+        "species": [
+            {
+                "species": "dtaether:golden_oak",
+                "weight": 1
+            }
+        ]
+    }
+}

@@ -1,0 +1,6 @@
+{
+  "type": "neoforge:add_features",
+  "biomes": "deep_aether:luminescent_forest",
+  "features": "dtaether:luminescent_skyroot_forest_trees",
+  "step": "vegetal_decoration"
+}

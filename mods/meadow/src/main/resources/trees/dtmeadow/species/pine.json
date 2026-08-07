@@ -1,0 +1,33 @@
+{
+  "family": "dtmeadow:pine",
+  "tapering": 0.6,
+  "signal_energy": 15,
+  "up_probability": 2,
+  "lowest_branch_height": 4,
+  "growth_rate": 0.78,
+  "growth_logic_kit": {
+    "name": "conifer",
+    "properties": {
+      "energy_divisor": 1,
+      "horizontal_limiter": 2
+    }
+  },
+  "leaves_properties": "dtmeadow:pine",
+  "environment_factors": {
+    "cold": 1.05,
+    "hot": 0.45,
+    "dry": 0.45,
+    "forest": 1.05
+  },
+  "perfect_biomes": {
+    "tag": "#meadow:is_meadow"
+  },
+  "always_show_on_waila": false,
+  "generate_seed": true,
+  "generate_sapling": true,
+  "drop_seeds": true,
+  "features": [
+    "conifer_topper"
+  ],
+  "primitive_saplings": []
+}

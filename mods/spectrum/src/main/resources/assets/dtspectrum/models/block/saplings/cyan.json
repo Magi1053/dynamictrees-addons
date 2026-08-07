@@ -1,0 +1,8 @@
+{
+  "parent": "dynamictrees:block/smartmodel/sapling",
+  "textures": {
+    "particle": "spectrum:block/cyan_leaves",
+    "log": "spectrum:block/cyan_log",
+    "leaves": "spectrum:block/cyan_leaves"
+  }
+}

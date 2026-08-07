@@ -1,0 +1,8 @@
+{
+  "type": "neoforge:remove_features",
+  "biomes": "#spectrum:colored_trees_generating_in",
+  "features": "spectrum:colored_tree_patch",
+  "steps": [
+    "vegetal_decoration"
+  ]
+}

@@ -1,0 +1,436 @@
+[
+  {
+    "select": {
+      "name": "minecraft:jungle"
+    },
+    "apply": {
+      "species": {
+        "method": "splice_before",
+        "random": {
+          "dtrubber:rubber": 3,
+          "...": 47
+        }
+      },
+      "density": [
+        1.375
+      ],
+      "chance": 0.3
+    }
+  },
+  {
+    "select": {
+      "name": "minecraft:sparse_jungle"
+    },
+    "apply": {
+      "species": {
+        "method": "splice_before",
+        "random": {
+          "dtrubber:rubber": 3,
+          "...": 47
+        }
+      },
+      "density": [
+        1.188
+      ],
+      "chance": 0.25
+    }
+  },
+  {
+    "select": {
+      "name": "minecraft:bamboo_jungle"
+    },
+    "apply": {
+      "species": {
+        "method": "splice_before",
+        "random": {
+          "dtrubber:rubber": 3,
+          "...": 47
+        }
+      },
+      "density": [
+        1.188
+      ],
+      "chance": 0.25
+    }
+  },
+  {
+    "select": {
+      "name": "minecraft:swamp"
+    },
+    "apply": {
+      "species": {
+        "method": "splice_before",
+        "random": {
+          "dtrubber:rubber": 1,
+          "...": 49
+        }
+      },
+      "density": [
+        0.938
+      ],
+      "chance": 0.15
+    }
+  },
+  {
+    "only_if_loaded": "regions_unexplored",
+    "select": {
+      "name": "regions_unexplored:rainforest"
+    },
+    "apply": {
+      "species": {
+        "method": "splice_before",
+        "random": {
+          "dtrubber:rubber": 3,
+          "...": 47
+        }
+      }
+    }
+  },
+  {
+    "only_if_loaded": "regions_unexplored",
+    "select": {
+      "name": "regions_unexplored:sparse_rainforest"
+    },
+    "apply": {
+      "species": {
+        "method": "splice_before",
+        "random": {
+          "dtrubber:rubber": 3,
+          "...": 47
+        }
+      }
+    }
+  },
+  {
+    "only_if_loaded": "regions_unexplored",
+    "select": {
+      "name": "regions_unexplored:marsh"
+    },
+    "apply": {
+      "species": {
+        "method": "splice_before",
+        "random": {
+          "dtrubber:rubber": 1,
+          "...": 49
+        }
+      }
+    }
+  },
+  {
+    "only_if_loaded": "regions_unexplored",
+    "select": {
+      "name": "regions_unexplored:eucalyptus_forest"
+    },
+    "apply": {
+      "species": {
+        "method": "splice_before",
+        "random": {
+          "dtrubber:rubber": 2,
+          "...": 48
+        }
+      }
+    }
+  },
+  {
+    "only_if_loaded": "regions_unexplored",
+    "select": {
+      "name": "regions_unexplored:bamboo_forest"
+    },
+    "apply": {
+      "species": {
+        "method": "splice_before",
+        "random": {
+          "dtrubber:rubber": 2,
+          "...": 48
+        }
+      }
+    }
+  },
+  {
+    "only_if_loaded": "regions_unexplored",
+    "select": {
+      "name": "regions_unexplored:tropics"
+    },
+    "apply": {
+      "species": {
+        "method": "splice_before",
+        "random": {
+          "dtrubber:rubber": 2,
+          "...": 48
+        }
+      }
+    }
+  },
+  {
+    "only_if_loaded": "regions_unexplored",
+    "select": {
+      "name": "regions_unexplored:bayou"
+    },
+    "apply": {
+      "species": {
+        "method": "splice_before",
+        "random": {
+          "dtrubber:rubber": 1,
+          "...": 49
+        }
+      }
+    }
+  },
+  {
+    "only_if_loaded": "regions_unexplored",
+    "select": {
+      "name": "regions_unexplored:old_growth_bayou"
+    },
+    "apply": {
+      "species": {
+        "method": "splice_before",
+        "random": {
+          "dtrubber:rubber": 1,
+          "...": 49
+        }
+      }
+    }
+  },
+  {
+    "only_if_loaded": "natures_spirit",
+    "select": {
+      "name": "natures_spirit:tropical_woods"
+    },
+    "apply": {
+      "species": {
+        "method": "splice_before",
+        "random": {
+          "dtrubber:rubber": 3,
+          "...": 47
+        }
+      }
+    }
+  },
+  {
+    "only_if_loaded": "natures_spirit",
+    "select": {
+      "name": "natures_spirit:tropical_basin"
+    },
+    "apply": {
+      "species": {
+        "method": "splice_before",
+        "random": {
+          "dtrubber:rubber": 3,
+          "...": 47
+        }
+      }
+    }
+  },
+  {
+    "only_if_loaded": "natures_spirit",
+    "select": {
+      "name": "natures_spirit:sparse_tropical_woods"
+    },
+    "apply": {
+      "species": {
+        "method": "splice_before",
+        "random": {
+          "dtrubber:rubber": 3,
+          "...": 47
+        }
+      }
+    }
+  },
+  {
+    "only_if_loaded": "natures_spirit",
+    "select": {
+      "name": "natures_spirit:marsh"
+    },
+    "apply": {
+      "species": {
+        "method": "splice_before",
+        "random": {
+          "dtrubber:rubber": 1,
+          "...": 49
+        }
+      }
+    }
+  },
+  {
+    "only_if_loaded": "natures_spirit",
+    "select": {
+      "name": "natures_spirit:bamboo_wetlands"
+    },
+    "apply": {
+      "species": {
+        "method": "splice_before",
+        "random": {
+          "dtrubber:rubber": 2,
+          "...": 48
+        }
+      }
+    }
+  },
+  {
+    "only_if_loaded": "natures_spirit",
+    "select": {
+      "name": "natures_spirit:tropical_shores"
+    },
+    "apply": {
+      "species": {
+        "method": "splice_before",
+        "random": {
+          "dtrubber:rubber": 1,
+          "...": 49
+        }
+      }
+    }
+  },
+  {
+    "only_if_loaded": "biomesoplenty",
+    "select": {
+      "name": "biomesoplenty:.*",
+      "tag": "#minecraft:is_jungle"
+    },
+    "apply": {
+      "species": {
+        "method": "splice_before",
+        "random": {
+          "dtrubber:rubber": 2,
+          "...": 48
+        }
+      }
+    }
+  },
+  {
+    "only_if_loaded": "biomesoplenty",
+    "select": {
+      "name": "biomesoplenty:tropics"
+    },
+    "apply": {
+      "species": {
+        "method": "splice_before",
+        "random": {
+          "dtrubber:rubber": 2,
+          "...": 48
+        }
+      }
+    }
+  },
+  {
+    "only_if_loaded": "biomesoplenty",
+    "select": {
+      "name": "biomesoplenty:marsh"
+    },
+    "apply": {
+      "species": {
+        "method": "splice_before",
+        "random": {
+          "dtrubber:rubber": 1,
+          "...": 49
+        }
+      }
+    }
+  },
+  {
+    "only_if_loaded": "biomesoplenty",
+    "select": {
+      "name": "biomesoplenty:wetland"
+    },
+    "apply": {
+      "species": {
+        "method": "splice_before",
+        "random": {
+          "dtrubber:rubber": 1,
+          "...": 49
+        }
+      }
+    }
+  },
+  {
+    "only_if_loaded": "biomesoplenty",
+    "select": {
+      "name": "biomesoplenty:bayou"
+    },
+    "apply": {
+      "species": {
+        "method": "splice_before",
+        "random": {
+          "dtrubber:rubber": 1,
+          "...": 49
+        }
+      }
+    }
+  },
+  {
+    "only_if_loaded": "biomeswevegone",
+    "select": {
+      "name": "biomeswevegone:.*",
+      "tag": "#minecraft:is_jungle"
+    },
+    "apply": {
+      "species": {
+        "method": "splice_before",
+        "random": {
+          "dtrubber:rubber": 3,
+          "...": 47
+        }
+      }
+    }
+  },
+  {
+    "only_if_loaded": "biomeswevegone",
+    "select": {
+      "name": "biomeswevegone:bayou"
+    },
+    "apply": {
+      "species": {
+        "method": "splice_before",
+        "random": {
+          "dtrubber:rubber": 1,
+          "...": 49
+        }
+      }
+    }
+  },
+  {
+    "only_if_loaded": "biomeswevegone",
+    "select": {
+      "name": "biomeswevegone:cypress_swamplands"
+    },
+    "apply": {
+      "species": {
+        "method": "splice_before",
+        "random": {
+          "dtrubber:rubber": 1,
+          "...": 49
+        }
+      }
+    }
+  },
+  {
+    "only_if_loaded": "biomeswevegone",
+    "select": {
+      "name": "biomeswevegone:cypress_wetlands"
+    },
+    "apply": {
+      "species": {
+        "method": "splice_before",
+        "random": {
+          "dtrubber:rubber": 1,
+          "...": 49
+        }
+      }
+    }
+  },
+  {
+    "only_if_loaded": "biomeswevegone",
+    "select": {
+      "name": "biomeswevegone:white_mangrove_marshes"
+    },
+    "apply": {
+      "species": {
+        "method": "splice_before",
+        "random": {
+          "dtrubber:rubber": 1,
+          "...": 49
+        }
+      }
+    }
+  }
+]

@@ -1,0 +1,8 @@
+{
+  "loader": "dynamictrees:branch",
+  "textures": {
+    "bark": "dtrubber:block/rubber_log",
+    "rings": "dtrubber:block/rubber_log_top",
+    "rings_thick": "dtrubber:block/rubber_log_top_thick"
+  }
+}

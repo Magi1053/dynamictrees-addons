@@ -1,0 +1,26 @@
+{
+  "neoforge:conditions": [
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "create"
+    }
+  ],
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "P": {
+      "tag": "c:rubber"
+    },
+    "T": {
+      "item": "create:copper_casing"
+    }
+  },
+  "pattern": [
+    "T",
+    "P"
+  ],
+  "result": {
+    "count": 1,
+    "id": "create:spout"
+  }
+}

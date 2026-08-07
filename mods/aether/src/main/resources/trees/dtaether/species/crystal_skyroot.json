@@ -1,0 +1,36 @@
+{
+  "family": "dtaether:skyroot",
+  "tapering": 0.212,
+  "signal_energy": 7,
+  "growth_rate": 0.8,
+  "up_probability": 2,
+  "lowest_branch_height": 4,
+  "leaves_properties": "dtaether:crystal_skyroot",
+  "preferred_climate": "temperate",
+  "climate_tolerance": 0.5,
+  "perfect_biomes": {
+    "tag": "#aether:is_aether"
+  },
+  "acceptable_soils": [
+    "dirt_like",
+    "mud_like"
+  ],
+  "world_gen_acceptable_soils": [
+    "dirt_like",
+    "mud_like"
+  ],
+  "primitive_sapling": "aether:skyroot_sapling",
+  "primitive_saplings": [],
+  "generate_seed": false,
+  "generate_sapling": false,
+  "drop_seeds": false,
+  "features": [
+    {
+      "name": "alt_leaves",
+      "properties": {
+        "alternative_leaves": "dtaether:crystal_skyroot_fruit",
+        "place_chance": 0.2
+      }
+    }
+  ]
+}

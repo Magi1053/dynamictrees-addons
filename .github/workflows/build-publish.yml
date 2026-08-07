@@ -1,0 +1,86 @@
+name: Build and Publish
+
+on:
+  push:
+    branches: [main]
+    tags:
+      - "aether/v*"
+      - "vinery/v*"
+      - "meadow/v*"
+      - "rubber/v*"
+      - "spectrum/v*"
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        module: [aether, vinery, meadow, rubber, spectrum]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: gradle
+      - name: Build ${{ matrix.module }}
+        run: |
+          chmod +x gradlew
+          ./gradlew -p "mods/${{ matrix.module }}" build --no-daemon
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.module }}-jar
+          path: mods/${{ matrix.module }}/build/libs/*.jar
+          if-no-files-found: error
+
+  publish:
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: gradle
+      - name: Resolve module from tag
+        id: meta
+        shell: bash
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          MODULE="${TAG%%/*}"
+          VERSION="${TAG#*/v}"
+          case "$MODULE" in
+            aether|vinery|meadow|rubber|spectrum) ;;
+            *) echo "Unknown module in tag: $TAG"; exit 1 ;;
+          esac
+          PROP_VERSION=$(grep -m1 '^mod_version=' "mods/$MODULE/gradle.properties" | cut -d= -f2)
+          if [ "$PROP_VERSION" != "$VERSION" ]; then
+            echo "Tag version $VERSION does not match mods/$MODULE mod_version=$PROP_VERSION"
+            exit 1
+          fi
+          PROJECT_ID=$(grep -m1 '^modrinth_project_id=' "mods/$MODULE/gradle.properties" | cut -d= -f2-)
+          if [ -z "$PROJECT_ID" ]; then
+            echo "modrinth_project_id is empty in mods/$MODULE/gradle.properties"
+            exit 1
+          fi
+          echo "module=$MODULE" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+      - name: Publish ${{ steps.meta.outputs.module }} to Modrinth
+        env:
+          MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
+        run: |
+          chmod +x gradlew
+          ./gradlew -p "mods/${{ steps.meta.outputs.module }}" build modrinth --no-daemon
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.meta.outputs.module }}-${{ steps.meta.outputs.version }}
+          path: mods/${{ steps.meta.outputs.module }}/build/libs/*.jar

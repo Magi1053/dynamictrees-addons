@@ -1,0 +1,18 @@
+{
+  "variants": {
+    "": [
+      {
+        "model": "vinery:block/apple_leaves_stage_0"
+      },
+      {
+        "model": "vinery:block/apple_leaves_stage_1"
+      },
+      {
+        "model": "vinery:block/apple_leaves_stage_2"
+      },
+      {
+        "model": "vinery:block/apple_leaves_stage_3"
+      }
+    ]
+  }
+}

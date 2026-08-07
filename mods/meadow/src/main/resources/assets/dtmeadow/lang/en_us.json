@@ -1,0 +1,16 @@
+{
+    "block.dtmeadow.pine_branch": "Pine Tree",
+    "block.dtmeadow.pine_sapling": "Pine Sapling",
+    "item.dtmeadow.pine_seed": "Pine Seed",
+    "species.dtmeadow.pine": "Pine",
+    "species.dtmeadow.orange_pine": "Orange Pine",
+    "block.dtmeadow.alpine_birch_branch": "Alpine Birch Tree",
+    "species.dtmeadow.alpine_birch": "Alpine Birch",
+    "block.dtmeadow.pine_leaves": "Pine Leaves",
+    "block.dtmeadow.orange_pine_leaves": "Orange Pine Leaves",
+    "block.dtmeadow.stripped_pine_branch": "Stripped Pine Tree",
+    "block.dtmeadow.alpine_birch_leaves": "Alpine Birch Leaves",
+    "mod.dtmeadow": "Dynamic Trees for [Let's Do] Meadow & Vinery",
+    "modmenu.nameTranslation.dtmeadow": "Dynamic Trees for [Let's Do] Meadow & Vinery",
+    "fabric.mod.dtmeadow": "Dynamic Trees for [Let's Do] Meadow & Vinery"
+}

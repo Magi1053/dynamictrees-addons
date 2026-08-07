@@ -1,0 +1,29 @@
+{
+  "family": "dtaether:cruderoot",
+  "tapering": 0.247,
+  "signal_energy": 7,
+  "up_probability": 3,
+  "lowest_branch_height": 3,
+  "growth_rate": 0.6,
+  "leaves_properties": "dtaether:cruderoot",
+  "preferred_climate": "temperate",
+  "climate_tolerance": 0.5,
+  "perfect_biomes": {
+    "tag": "#aether:is_aether"
+  },
+  "acceptable_soils": [
+    "dirt_like",
+    "mud_like"
+  ],
+  "world_gen_acceptable_soils": [
+    "dirt_like",
+    "mud_like"
+  ],
+  "primitive_sapling": "deep_aether:cruderoot_sapling",
+  "primitive_saplings": [
+    "deep_aether:cruderoot_sapling"
+  ],
+  "generate_seed": true,
+  "generate_sapling": true,
+  "drop_seeds": true
+}

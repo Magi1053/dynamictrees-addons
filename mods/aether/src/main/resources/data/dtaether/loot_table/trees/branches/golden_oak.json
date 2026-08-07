@@ -1,0 +1,152 @@
+{
+  "type": "minecraft:block",
+  "pools": [
+    {
+      "bonus_rolls": 0,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "conditions": [
+            {
+              "condition": "minecraft:match_tool",
+              "predicate": {
+                "predicates": {
+                  "minecraft:enchantments": [
+                    {
+                      "enchantments": "minecraft:silk_touch",
+                      "levels": {
+                        "min": 1
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "functions": [
+            {
+              "function": "dynamictrees:multiply_logs_count"
+            },
+            {
+              "function": "minecraft:explosion_decay"
+            }
+          ],
+          "name": "aether:golden_oak_log"
+        }
+      ],
+      "rolls": 1
+    },
+    {
+      "bonus_rolls": 0,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "conditions": [
+            {
+              "condition": "minecraft:inverted",
+              "term": {
+                "condition": "minecraft:match_tool",
+                "predicate": {
+                  "predicates": {
+                    "minecraft:enchantments": [
+                      {
+                        "enchantments": "minecraft:silk_touch",
+                        "levels": {
+                          "min": 1
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          ],
+          "functions": [
+            {
+              "function": "dynamictrees:multiply_logs_count"
+            },
+            {
+              "function": "minecraft:explosion_decay"
+            }
+          ],
+          "name": "aether:golden_oak_log"
+        }
+      ],
+      "rolls": 1
+    },
+    {
+      "bonus_rolls": 0,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "conditions": [
+            {
+              "condition": "minecraft:match_tool",
+              "predicate": {
+                "items": "#aether:golden_amber_harvesters"
+              }
+            },
+            {
+              "condition": "minecraft:inverted",
+              "term": {
+                "condition": "minecraft:match_tool",
+                "predicate": {
+                  "predicates": {
+                    "minecraft:enchantments": [
+                      {
+                        "enchantments": "minecraft:silk_touch",
+                        "levels": {
+                          "min": 1
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          ],
+          "functions": [
+            {
+              "function": "minecraft:set_count",
+              "count": {
+                "type": "minecraft:uniform",
+                "min": 1,
+                "max": 2
+              },
+              "add": false
+            },
+            {
+              "enchantment": "minecraft:fortune",
+              "formula": "minecraft:ore_drops",
+              "function": "minecraft:apply_bonus"
+            },
+            {
+              "function": "minecraft:explosion_decay"
+            }
+          ],
+          "name": "aether:golden_amber"
+        }
+      ],
+      "rolls": 1
+    },
+    {
+      "bonus_rolls": 0,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "functions": [
+            {
+              "function": "dynamictrees:multiply_sticks_count"
+            },
+            {
+              "function": "minecraft:explosion_decay"
+            }
+          ],
+          "name": "aether:skyroot_stick"
+        }
+      ],
+      "rolls": 1
+    }
+  ],
+  "random_sequence": "dtaether:trees/branches/golden_oak"
+}

@@ -1,0 +1,8 @@
+{
+  "common_leaves": "dtmeadow:pine",
+  "common_species": "dtmeadow:pine",
+  "primitive_log": "meadow:pine_log",
+  "primitive_stripped_log": "meadow:stripped_pine_log",
+  "max_branch_radius": 8,
+  "conifer_variants": true
+}

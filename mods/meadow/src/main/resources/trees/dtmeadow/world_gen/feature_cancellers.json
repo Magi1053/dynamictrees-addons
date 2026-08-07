@@ -1,0 +1,13 @@
+[
+  {
+    "select": {
+      "tag": "#meadow:is_meadow"
+    },
+    "cancellers": {
+      "type": "tree",
+      "namespaces": [
+        "meadow"
+      ]
+    }
+  }
+]
