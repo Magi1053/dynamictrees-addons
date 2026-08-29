@@ -1,0 +1,45 @@
+plugins {
+    id 'java-library'
+    id 'net.neoforged.moddev'
+    id 'com.modrinth.minotaur'
+}
+
+repositories {
+    exclusiveContent {
+        forRepository {
+            maven {
+                url = 'https://maven.ryanhcode.dev/releases'
+                name = 'RyanHCode Maven'
+            }
+        }
+        filter {
+            includeGroup('dev.ryanhcode.sable')
+            includeGroup('dev.ryanhcode.sable-companion')
+        }
+    }
+}
+
+dependencies {
+    compileOnly "dev.ryanhcode.sable:sable-common-1.21.1:${sable_version}"
+    compileOnly 'maven.modrinth:dynamictrees:1.7.2'
+
+    // Dev client runtime. Sable NeoForge jars embed Veil; sable-common is compile-only to avoid a duplicate classpath.
+    runtimeOnly 'maven.modrinth:dynamictrees:1.7.2'
+    runtimeOnly "maven.modrinth:sable:${sable_version}+mc1.21.1"
+    runtimeOnly 'maven.modrinth:jade:15.10.6+neoforge'
+
+    testImplementation platform('org.junit:junit-bom:5.11.4')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.named('test', Test).configure {
+    useJUnitPlatform()
+}
+
+modrinth {
+    dependencies {
+        required.project 'dynamictrees'
+        required.project 'sable'
+    }
+}

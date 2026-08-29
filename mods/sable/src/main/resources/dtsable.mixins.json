@@ -1,0 +1,27 @@
+{
+    "required": true,
+    "package": "com.skcraft.dtsable.mixin",
+    "compatibilityLevel": "JAVA_21",
+    "mixins": [
+        "BetterEndDebugMixin",
+        "FellingMixin",
+        "FallingTreeDropMixin",
+        "FallenBranchMixin",
+        "FallenBranchInteractionMixin",
+        "FallenTreeGameModeMixin",
+        "FallenShellMixin",
+        "ManagedTreeHeatMapMixin",
+        "DynamicLeavesCollisionMixin",
+        "DtWoodPhysicsPropertiesMixin",
+        "TrunkShellCollisionMixin",
+        "ThickBranchRadiusAccessor",
+        "ThickBranchRadiusMixin"
+    ],
+    "client": [
+        "ShellCrackOverlayMixin"
+    ],
+    "injectors": {
+        "defaultRequire": 1
+    },
+    "minVersion": "0.8"
+}
