@@ -18,6 +18,10 @@ const MOD_ID = "dtrubber";
 const SPECIES = "rubber";
 const SPAWN_SCALE = 1.25;
 
+function out(...parts) {
+    return join(outRoot, ...parts);
+}
+
 function writeJson(path, data) {
     mkdirSync(dirname(path), { recursive: true });
     writeFileSync(path, JSON.stringify(data, null, 2) + "\n", "utf8");
@@ -28,12 +32,24 @@ function writeText(path, text) {
     writeFileSync(path, text.endsWith("\n") ? text : text + "\n", "utf8");
 }
 
+function writeTag(ns, kind, name, values) {
+    const parts = name.split("/");
+    const file = parts.pop();
+    writeJson(out("data", ns, "tags", kind, ...parts, `${file}.json`), { values });
+}
+
+function writeRecipes(root, condition, entries) {
+    for (const [relativePath, recipe] of entries) {
+        writeJson(join(root, relativePath), { ...condition, ...recipe });
+    }
+}
+
 function cloneLoot(srcRelative, destRelative, replacements) {
     let text = readFileSync(join(dtLootBase, srcRelative), "utf8");
     for (const [from, to] of replacements) {
         text = text.split(from).join(to);
     }
-    writeText(join(outRoot, "data", MOD_ID, "loot_table", destRelative), text);
+    writeText(out("data", MOD_ID, "loot_table", destRelative), text);
 }
 
 // BOP short_jungle: bushy jungle canopy with a short trunk. Vanilla jungle jo codes
@@ -136,27 +152,23 @@ function rubberSpliceOnly(rubberWeight = 3, poolWeight = 47) {
     };
 }
 
-function rubberLightSpliceOnly(rubberWeight = 2, poolWeight = 48) {
+function splice(rubberWeight = 2, poolWeight = 48) {
     return rubberSpliceOnly(rubberWeight, poolWeight);
 }
 
-// Peripheral modded tropical biomes without a dedicated DT addon entry.
-function rubberModdedJungleApply(overrides = {}, rubberWeight = 2) {
-    const baseChance = overrides.chance ?? 0.14;
-    const baseDensity = (overrides.density ?? [0.75])[0];
-    const { chance, density, ...rest } = overrides;
-    return rubberJungleApply(
-        {
-            chance: baseChance,
-            density: [baseDensity],
-            ...rest,
-        },
-        rubberWeight,
-    );
+function biomeEntry(mod, biome, apply, extraSelect = {}) {
+    const entry = {
+        select: { name: `${mod}:${biome}`, ...extraSelect },
+        apply,
+    };
+    if (mod !== "minecraft") {
+        entry.only_if_loaded = mod;
+    }
+    return entry;
 }
 
 function writeTreePack() {
-    const treeRoot = join(outRoot, "trees", MOD_ID);
+    const treeRoot = out("trees", MOD_ID);
 
     writeJson(join(treeRoot, "families", `${SPECIES}.json`), {
         common_leaves: `${MOD_ID}:${SPECIES}`,
@@ -212,227 +224,44 @@ function writeTreePack() {
 
     writeJson(join(treeRoot, "world_gen", "feature_cancellers.json"), []);
 
+    const jungleTag = { tag: "#minecraft:is_jungle" };
     writeJson(join(treeRoot, "world_gen", "default.json"), [
-        {
-            select: {
-                name: "minecraft:jungle",
-            },
-            apply: rubberJungleApply({
-                chance: 0.24,
-                density: [1.1],
-            }),
-        },
-        {
-            select: {
-                name: "minecraft:sparse_jungle",
-            },
-            apply: rubberJungleApply({
-                chance: 0.2,
-                density: [0.95],
-            }),
-        },
-        {
-            select: {
-                name: "minecraft:bamboo_jungle",
-            },
-            apply: rubberJungleApply({
-                chance: 0.2,
-                density: [0.95],
-            }),
-        },
-        {
-            select: {
-                name: "minecraft:swamp",
-            },
-            apply: rubberWetlandApply(),
-        },
-        {
-            only_if_loaded: "regions_unexplored",
-            select: {
-                name: "regions_unexplored:rainforest",
-            },
-            apply: rubberSpliceOnly(),
-        },
-        {
-            only_if_loaded: "regions_unexplored",
-            select: {
-                name: "regions_unexplored:sparse_rainforest",
-            },
-            apply: rubberSpliceOnly(),
-        },
-        {
-            only_if_loaded: "regions_unexplored",
-            select: {
-                name: "regions_unexplored:marsh",
-            },
-            apply: rubberLightSpliceOnly(1, 49),
-        },
-        {
-            only_if_loaded: "regions_unexplored",
-            select: {
-                name: "regions_unexplored:eucalyptus_forest",
-            },
-            apply: rubberLightSpliceOnly(),
-        },
-        {
-            only_if_loaded: "regions_unexplored",
-            select: {
-                name: "regions_unexplored:bamboo_forest",
-            },
-            apply: rubberLightSpliceOnly(),
-        },
-        {
-            only_if_loaded: "regions_unexplored",
-            select: {
-                name: "regions_unexplored:tropics",
-            },
-            apply: rubberLightSpliceOnly(),
-        },
-        {
-            only_if_loaded: "regions_unexplored",
-            select: {
-                name: "regions_unexplored:bayou",
-            },
-            apply: rubberLightSpliceOnly(1, 49),
-        },
-        {
-            only_if_loaded: "regions_unexplored",
-            select: {
-                name: "regions_unexplored:old_growth_bayou",
-            },
-            apply: rubberLightSpliceOnly(1, 49),
-        },
-        {
-            only_if_loaded: "natures_spirit",
-            select: {
-                name: "natures_spirit:tropical_woods",
-            },
-            apply: rubberSpliceOnly(),
-        },
-        {
-            only_if_loaded: "natures_spirit",
-            select: {
-                name: "natures_spirit:tropical_basin",
-            },
-            apply: rubberSpliceOnly(),
-        },
-        {
-            only_if_loaded: "natures_spirit",
-            select: {
-                name: "natures_spirit:sparse_tropical_woods",
-            },
-            apply: rubberSpliceOnly(),
-        },
-        {
-            only_if_loaded: "natures_spirit",
-            select: {
-                name: "natures_spirit:marsh",
-            },
-            apply: rubberLightSpliceOnly(1, 49),
-        },
-        {
-            only_if_loaded: "natures_spirit",
-            select: {
-                name: "natures_spirit:bamboo_wetlands",
-            },
-            apply: rubberLightSpliceOnly(),
-        },
-        {
-            only_if_loaded: "natures_spirit",
-            select: {
-                name: "natures_spirit:tropical_shores",
-            },
-            apply: rubberLightSpliceOnly(1, 49),
-        },
-        {
-            only_if_loaded: "biomesoplenty",
-            select: {
-                name: "biomesoplenty:.*",
-                tag: "#minecraft:is_jungle",
-            },
-            apply: rubberLightSpliceOnly(),
-        },
-        {
-            only_if_loaded: "biomesoplenty",
-            select: {
-                name: "biomesoplenty:tropics",
-            },
-            apply: rubberLightSpliceOnly(),
-        },
-        {
-            only_if_loaded: "biomesoplenty",
-            select: {
-                name: "biomesoplenty:marsh",
-            },
-            apply: rubberLightSpliceOnly(1, 49),
-        },
-        {
-            only_if_loaded: "biomesoplenty",
-            select: {
-                name: "biomesoplenty:wetland",
-            },
-            apply: rubberLightSpliceOnly(1, 49),
-        },
-        {
-            only_if_loaded: "biomesoplenty",
-            select: {
-                name: "biomesoplenty:bayou",
-            },
-            apply: rubberLightSpliceOnly(1, 49),
-        },
-        {
-            only_if_loaded: "biomeswevegone",
-            select: {
-                name: "biomeswevegone:.*",
-                tag: "#minecraft:is_jungle",
-            },
-            apply: rubberSpliceOnly(),
-        },
-        {
-            only_if_loaded: "biomeswevegone",
-            select: {
-                name: "biomeswevegone:bayou",
-            },
-            apply: rubberLightSpliceOnly(1, 49),
-        },
-        {
-            only_if_loaded: "biomeswevegone",
-            select: {
-                name: "biomeswevegone:cypress_swamplands",
-            },
-            apply: rubberLightSpliceOnly(1, 49),
-        },
-        {
-            only_if_loaded: "biomeswevegone",
-            select: {
-                name: "biomeswevegone:cypress_wetlands",
-            },
-            apply: rubberLightSpliceOnly(1, 49),
-        },
-        {
-            only_if_loaded: "biomeswevegone",
-            select: {
-                name: "biomeswevegone:white_mangrove_marshes",
-            },
-            apply: rubberLightSpliceOnly(1, 49),
-        },
-    ]);
+        ["minecraft", "jungle", rubberJungleApply({ chance: 0.24, density: [1.1] })],
+        ["minecraft", "sparse_jungle", rubberJungleApply({ chance: 0.2, density: [0.95] })],
+        ["minecraft", "bamboo_jungle", rubberJungleApply({ chance: 0.2, density: [0.95] })],
+        ["minecraft", "swamp", rubberWetlandApply()],
+        ["regions_unexplored", "rainforest", rubberSpliceOnly()],
+        ["regions_unexplored", "sparse_rainforest", rubberSpliceOnly()],
+        ["regions_unexplored", "marsh", splice(1, 49)],
+        ["regions_unexplored", "eucalyptus_forest", splice()],
+        ["regions_unexplored", "bamboo_forest", splice()],
+        ["regions_unexplored", "tropics", splice()],
+        ["regions_unexplored", "bayou", splice(1, 49)],
+        ["regions_unexplored", "old_growth_bayou", splice(1, 49)],
+        ["natures_spirit", "tropical_woods", rubberSpliceOnly()],
+        ["natures_spirit", "tropical_basin", rubberSpliceOnly()],
+        ["natures_spirit", "sparse_tropical_woods", rubberSpliceOnly()],
+        ["natures_spirit", "marsh", splice(1, 49)],
+        ["natures_spirit", "bamboo_wetlands", splice()],
+        ["natures_spirit", "tropical_shores", splice(1, 49)],
+        ["biomesoplenty", ".*", splice(), jungleTag],
+        ["biomesoplenty", "tropics", splice()],
+        ["biomesoplenty", "marsh", splice(1, 49)],
+        ["biomesoplenty", "wetland", splice(1, 49)],
+        ["biomesoplenty", "bayou", splice(1, 49)],
+        ["biomeswevegone", ".*", rubberSpliceOnly(), jungleTag],
+        ["biomeswevegone", "bayou", splice(1, 49)],
+        ["biomeswevegone", "cypress_swamplands", splice(1, 49)],
+        ["biomeswevegone", "cypress_wetlands", splice(1, 49)],
+        ["biomeswevegone", "white_mangrove_marshes", splice(1, 49)],
+    ].map(([mod, biome, apply, extra]) => biomeEntry(mod, biome, apply, extra)));
 }
 
 function writeBranchTags() {
     const branchBlocks = [`${MOD_ID}:${SPECIES}_branch`, `${MOD_ID}:stripped_${SPECIES}_branch`];
-    const tagRoot = join(outRoot, "data", "dynamictrees", "tags");
-
-    for (const [subdir, fileName] of [
-        ["block", "branches_that_burn.json"],
-        ["item", "branches_that_burn.json"],
-    ]) {
-        writeJson(join(tagRoot, subdir, fileName), { values: branchBlocks });
-    }
-
-    writeJson(join(tagRoot, "block", "stripped_branches_that_burn.json"), {
-        values: [`${MOD_ID}:stripped_${SPECIES}_branch`],
-    });
+    writeTag("dynamictrees", "block", "branches_that_burn", branchBlocks);
+    writeTag("dynamictrees", "item", "branches_that_burn", branchBlocks);
+    writeTag("dynamictrees", "block", "stripped_branches_that_burn", [`${MOD_ID}:stripped_${SPECIES}_branch`]);
 }
 
 function writeLootTables() {
@@ -452,42 +281,33 @@ function writeLootTables() {
     cloneLoot("trees/voluntary/jungle.json", "trees/voluntary/rubber.json", replacements);
 }
 
-function generateDerivedTextures() {
-    const script = join(__dirname, "scripts", "generate_wood_textures.py");
-    if (!existsSync(script)) {
-        return;
+function resolveJavaCli() {
+    if (process.env.JAVA) {
+        return process.env.JAVA;
     }
-
-    const result = spawnSync("python", [script], {
-        cwd: __dirname,
-        encoding: "utf8",
-    });
-
-    if (result.status !== 0) {
-        throw new Error(result.stderr || result.stdout || "generate_wood_textures.py failed");
+    if (process.env.JAVA_HOME) {
+        return join(process.env.JAVA_HOME, "bin", process.platform === "win32" ? "java.exe" : "java");
     }
+    return "java";
 }
 
-function generateLatexItemTextures() {
-    const script = join(__dirname, "scripts", "generate_latex_item_textures.py");
+function generateTextures() {
+    const script = join(__dirname, "scripts", "GenerateTextures.java");
     if (!existsSync(script)) {
         return;
     }
-
-    const result = spawnSync("python", [script], {
+    const result = spawnSync(resolveJavaCli(), [script, __dirname], {
         cwd: __dirname,
         encoding: "utf8",
     });
-
     if (result.status !== 0) {
-        throw new Error(result.stderr || result.stdout || "generate_latex_item_textures.py failed");
+        throw new Error(result.stderr || result.stdout || "GenerateTextures.java failed");
     }
 }
 
 function writeTextures() {
-    generateDerivedTextures();
-    generateLatexItemTextures();
-    const texturesRoot = join(outRoot, "assets", MOD_ID, "textures");
+    generateTextures();
+    const texturesRoot = out("assets", MOD_ID, "textures");
     cpSync(join(bundledAssets, "textures"), texturesRoot, { recursive: true });
 
     for (const srcName of ["_src_birch_planks.png", "_src_stripped_jungle_log.png"]) {
@@ -557,7 +377,7 @@ function writeWoodBlockModel(assetsRoot, modelBase, sideTexture) {
 }
 
 function writeWoodAssets() {
-    const assetsRoot = join(outRoot, "assets", MOD_ID);
+    const assetsRoot = out("assets", MOD_ID);
 
     writeJson(join(assetsRoot, "blockstates", "rubber_log.json"), {
         variants: logBlockstateVariants("rubber_log"),
@@ -599,7 +419,7 @@ function writeWoodAssets() {
 
 function writeWoodLootTables() {
     for (const blockName of ["rubber_log", "stripped_rubber_log", "stripped_rubber_wood", "rubber_planks"]) {
-        writeJson(join(outRoot, "data", MOD_ID, "loot_table", "blocks", `${blockName}.json`), {
+        writeJson(out("data", MOD_ID, "loot_table", "blocks", `${blockName}.json`), {
             type: "minecraft:block",
             pools: [
                 {
@@ -627,70 +447,28 @@ function writeWoodTags() {
     const logItems = [`${MOD_ID}:rubber_log`, `${MOD_ID}:stripped_rubber_log`];
     const logBlocks = logItems.concat([`${MOD_ID}:stripped_rubber_wood`]);
     const planks = [`${MOD_ID}:rubber_planks`];
+    const rubberLog = [`${MOD_ID}:rubber_log`];
+    const strippedLog = [`${MOD_ID}:stripped_rubber_log`];
 
-    writeJson(join(outRoot, "data", MOD_ID, "tags", "item", "rubber_logs.json"), {
-        values: logItems,
-    });
-
-    writeJson(join(outRoot, "data", MOD_ID, "tags", "block", "rubber_logs.json"), {
-        values: logBlocks,
-    });
-
-    writeJson(join(outRoot, "data", "minecraft", "tags", "block", "logs.json"), {
-        values: logBlocks,
-    });
-
-    writeJson(join(outRoot, "data", "minecraft", "tags", "block", "logs_that_burn.json"), {
-        values: logBlocks,
-    });
-
-    writeJson(join(outRoot, "data", "minecraft", "tags", "block", "mineable", "axe.json"), {
-        values: logBlocks.concat(planks),
-    });
-
-    writeJson(join(outRoot, "data", "minecraft", "tags", "block", "planks.json"), {
-        values: planks,
-    });
-
-    writeJson(join(outRoot, "data", "minecraft", "tags", "item", "logs.json"), {
-        values: logItems,
-    });
-
-    writeJson(join(outRoot, "data", "minecraft", "tags", "item", "logs_that_burn.json"), {
-        values: logItems,
-    });
-
-    writeJson(join(outRoot, "data", "minecraft", "tags", "item", "planks.json"), {
-        values: planks,
-    });
-
-    writeJson(join(outRoot, "data", "c", "tags", "block", "logs.json"), {
-        values: [`${MOD_ID}:rubber_log`],
-    });
-
-    writeJson(join(outRoot, "data", "c", "tags", "item", "logs.json"), {
-        values: [`${MOD_ID}:rubber_log`],
-    });
-
-    writeJson(join(outRoot, "data", "c", "tags", "block", "stripped_logs.json"), {
-        values: [`${MOD_ID}:stripped_rubber_log`],
-    });
-
-    writeJson(join(outRoot, "data", "c", "tags", "item", "stripped_logs.json"), {
-        values: [`${MOD_ID}:stripped_rubber_log`],
-    });
-
-    writeJson(join(outRoot, "data", "c", "tags", "block", "planks.json"), {
-        values: planks,
-    });
-
-    writeJson(join(outRoot, "data", "c", "tags", "item", "planks.json"), {
-        values: planks,
-    });
+    writeTag(MOD_ID, "item", "rubber_logs", logItems);
+    writeTag(MOD_ID, "block", "rubber_logs", logBlocks);
+    writeTag("minecraft", "block", "logs", logBlocks);
+    writeTag("minecraft", "block", "logs_that_burn", logBlocks);
+    writeTag("minecraft", "block", "mineable/axe", logBlocks.concat(planks));
+    writeTag("minecraft", "block", "planks", planks);
+    writeTag("minecraft", "item", "logs", logItems);
+    writeTag("minecraft", "item", "logs_that_burn", logItems);
+    writeTag("minecraft", "item", "planks", planks);
+    writeTag("c", "block", "logs", rubberLog);
+    writeTag("c", "item", "logs", rubberLog);
+    writeTag("c", "block", "stripped_logs", strippedLog);
+    writeTag("c", "item", "stripped_logs", strippedLog);
+    writeTag("c", "block", "planks", planks);
+    writeTag("c", "item", "planks", planks);
 }
 
 function writeWoodRecipes() {
-    writeJson(join(outRoot, "data", MOD_ID, "recipe", "rubber_planks.json"), {
+    writeJson(out("data", MOD_ID, "recipe", "rubber_planks.json"), {
         type: "minecraft:crafting_shapeless",
         category: "building",
         group: "planks",
@@ -701,7 +479,7 @@ function writeWoodRecipes() {
         },
     });
 
-    writeJson(join(outRoot, "data", MOD_ID, "recipe", "stripped_rubber_wood.json"), {
+    writeJson(out("data", MOD_ID, "recipe", "stripped_rubber_wood.json"), {
         type: "minecraft:crafting_shaped",
         category: "building",
         group: "bark",
@@ -717,7 +495,7 @@ function writeWoodRecipes() {
 }
 
 function writeAssets() {
-    const assetsRoot = join(outRoot, "assets", MOD_ID);
+    const assetsRoot = out("assets", MOD_ID);
 
     writeJson(join(assetsRoot, "blockstates", `${SPECIES}_branch.json`), {
         variants: {
@@ -811,8 +589,7 @@ function modNotLoadedCondition(modid) {
 }
 
 function writeRubberItemAssets() {
-    const assetsRoot = join(outRoot, "assets", MOD_ID);
-    const itemModels = join(assetsRoot, "models", "item");
+    const itemModels = out("assets", MOD_ID, "models", "item");
 
     for (const itemName of ["raw_latex", "coagulated_latex", "rubber_ball", "rubber_sheet"]) {
         writeJson(join(itemModels, `${itemName}.json`), {
@@ -825,7 +602,7 @@ function writeRubberItemAssets() {
 }
 
 function writeRubberTagsAndRecipes() {
-    writeJson(join(outRoot, "data", "c", "tags", "item", "rubber.json"), {
+    writeJson(out("data", "c", "tags", "item", "rubber.json"), {
         values: [
             {
                 id: `${MOD_ID}:rubber_sheet`,
@@ -838,7 +615,7 @@ function writeRubberTagsAndRecipes() {
         ],
     });
 
-    const recipeRoot = join(outRoot, "data", MOD_ID, "recipe");
+    const recipeRoot = out("data", MOD_ID, "recipe");
     const createLoaded = [modLoadedCondition("create")];
     const tfmgLoaded = [modLoadedCondition("tfmg")];
     const noTfmg = [modNotLoadedCondition("tfmg")];
@@ -908,8 +685,8 @@ function writeModRubberOverrides() {
     const offroadLoaded = { "neoforge:conditions": [modLoadedCondition("offroad")] };
     const bigtiresLoaded = { "neoforge:conditions": [modLoadedCondition("bigtires")] };
 
-    const electroRoot = join(outRoot, "data", "electroenergetics", "recipe", "crafting");
-    const electroOverrides = [
+    const electroRoot = out("data", "electroenergetics", "recipe", "crafting");
+    writeRecipes(electroRoot, electroLoaded, [
         [
             "momentary_switch.json",
             {
@@ -997,48 +774,47 @@ function writeModRubberOverrides() {
                 result: { count: 1, id: "electroenergetics:cut_off_switch" },
             },
         ],
-    ];
+    ]);
 
-    for (const [relativePath, recipe] of electroOverrides) {
-        writeJson(join(electroRoot, relativePath), {
-            ...electroLoaded,
-            ...recipe,
-        });
-    }
+    writeRecipes(out("data", "offroad", "recipe"), offroadLoaded, [
+        [
+            "monstrous_tire.json",
+            {
+                type: "minecraft:crafting_shaped",
+                category: "misc",
+                key: {
+                    K: rubberNine,
+                    S: { item: "create:shaft" },
+                },
+                pattern: [" K ", "KSK", " K "],
+                result: { count: 1, id: "offroad:monstrous_tire" },
+            },
+        ],
+        [
+            "small_tire.json",
+            {
+                type: "minecraft:crafting_shapeless",
+                category: "misc",
+                ingredients: [{ item: "create:shaft" }, rubber],
+                result: { count: 1, id: "offroad:small_tire" },
+            },
+        ],
+        [
+            "tire.json",
+            {
+                type: "minecraft:crafting_shaped",
+                category: "misc",
+                key: {
+                    K: rubber,
+                    S: { item: "create:shaft" },
+                },
+                pattern: [" K ", "KSK", " K "],
+                result: { count: 1, id: "offroad:tire" },
+            },
+        ],
+    ]);
 
-    const offroadRoot = join(outRoot, "data", "offroad", "recipe");
-    writeJson(join(offroadRoot, "monstrous_tire.json"), {
-        ...offroadLoaded,
-        type: "minecraft:crafting_shaped",
-        category: "misc",
-        key: {
-            K: rubberNine,
-            S: { item: "create:shaft" },
-        },
-        pattern: [" K ", "KSK", " K "],
-        result: { count: 1, id: "offroad:monstrous_tire" },
-    });
-    writeJson(join(offroadRoot, "small_tire.json"), {
-        ...offroadLoaded,
-        type: "minecraft:crafting_shapeless",
-        category: "misc",
-        ingredients: [{ item: "create:shaft" }, rubber],
-        result: { count: 1, id: "offroad:small_tire" },
-    });
-    writeJson(join(offroadRoot, "tire.json"), {
-        ...offroadLoaded,
-        type: "minecraft:crafting_shaped",
-        category: "misc",
-        key: {
-            K: rubber,
-            S: { item: "create:shaft" },
-        },
-        pattern: [" K ", "KSK", " K "],
-        result: { count: 1, id: "offroad:tire" },
-    });
-
-    const bigtiresRoot = join(outRoot, "data", "bigtires", "recipe");
-    const bigtiresOverrides = [
+    writeRecipes(out("data", "bigtires", "recipe"), bigtiresLoaded, [
         [
             "big_tractor_tire.json",
             {
@@ -1219,14 +995,7 @@ function writeModRubberOverrides() {
                 result: { count: 2, id: "bigtires:vintage_tire" },
             },
         ],
-    ];
-
-    for (const [relativePath, recipe] of bigtiresOverrides) {
-        writeJson(join(bigtiresRoot, relativePath), {
-            ...bigtiresLoaded,
-            ...recipe,
-        });
-    }
+    ]);
 
     writePetrolspartsOverrides();
 }
@@ -1234,7 +1003,7 @@ function writeModRubberOverrides() {
 function writePetrolspartsOverrides() {
     const rubber = { tag: "c:rubber" };
 
-    writeJson(join(outRoot, "data", "petrolsparts", "recipe", "crafting", "pneumatic_tube.json"), {
+    writeJson(out("data", "petrolsparts", "recipe", "crafting", "pneumatic_tube.json"), {
         "neoforge:conditions": [
             modLoadedCondition("petrolsparts"),
             modLoadedCondition("create"),
@@ -1260,12 +1029,11 @@ function writePetrolspartsOverrides() {
 }
 
 function writeCreateRubberOverrides() {
-    const createRecipeRoot = join(outRoot, "data", "create", "recipe", "crafting");
     const createLoaded = { "neoforge:conditions": [modLoadedCondition("create")] };
     const rubber = { tag: "c:rubber" };
     const rubberNine = { tag: "c:rubber", count: 9 };
 
-    const overrides = [
+    writeRecipes(out("data", "create", "recipe", "crafting"), createLoaded, [
         [
             join("kinetics", "belt_connector.json"),
             {
@@ -1371,18 +1139,11 @@ function writeCreateRubberOverrides() {
                 result: { count: 2, id: "create:brass_tunnel" },
             },
         ],
-    ];
-
-    for (const [relativePath, recipe] of overrides) {
-        writeJson(join(createRecipeRoot, relativePath), {
-            ...createLoaded,
-            ...recipe,
-        });
-    }
+    ]);
 }
 
 function writeLang() {
-    writeJson(join(outRoot, "assets", MOD_ID, "lang", "en_us.json"), {
+    writeJson(out("assets", MOD_ID, "lang", "en_us.json"), {
         [`block.${MOD_ID}.${SPECIES}_branch`]: "Rubber Branch",
         [`block.${MOD_ID}.stripped_${SPECIES}_branch`]: "Stripped Rubber Branch",
         [`block.${MOD_ID}.rubber_log`]: "Rubber Log",
@@ -1401,7 +1162,7 @@ function writeLang() {
 }
 
 function writePackMeta() {
-    writeJson(join(outRoot, "pack.mcmeta"), {
+    writeJson(out("pack.mcmeta"), {
         pack: {
             description: "SKCraft Dynamic Trees rubber species",
             pack_format: 34,
