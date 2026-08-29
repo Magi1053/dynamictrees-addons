@@ -7,7 +7,7 @@ Replace Spectrum’s static colored tree patches with living **Dynamic Trees** s
 - All **16 dye colors** as Dynamic Trees species (black through yellow)
 - Colored tree patch worldgen rewritten to plant Dynamic Trees species at Spectrum-like rarity
 - Dynamic Trees seeds for farming and relocating colored trees
-- Primitive Spectrum saplings blocked / redirected so players use Dynamic Trees seeds
+- Primitive Spectrum saplings blocked in EMI / placement; pedestal crafts, leaf loot, and crushing give Dynamic Trees seeds instead
 - Revelationary integration so cloaked grayscale / progression looks still work with DT blocks
 - Optional EMI cleanup for replaced sapling stacks
 

@@ -1,0 +1,52 @@
+{
+  "values": {
+    "dtspectrum:black_seed": {
+      "chance": 0.3
+    },
+    "dtspectrum:blue_seed": {
+      "chance": 0.3
+    },
+    "dtspectrum:brown_seed": {
+      "chance": 0.3
+    },
+    "dtspectrum:cyan_seed": {
+      "chance": 0.3
+    },
+    "dtspectrum:gray_seed": {
+      "chance": 0.3
+    },
+    "dtspectrum:green_seed": {
+      "chance": 0.3
+    },
+    "dtspectrum:light_blue_seed": {
+      "chance": 0.3
+    },
+    "dtspectrum:light_gray_seed": {
+      "chance": 0.3
+    },
+    "dtspectrum:lime_seed": {
+      "chance": 0.3
+    },
+    "dtspectrum:magenta_seed": {
+      "chance": 0.3
+    },
+    "dtspectrum:orange_seed": {
+      "chance": 0.3
+    },
+    "dtspectrum:pink_seed": {
+      "chance": 0.3
+    },
+    "dtspectrum:purple_seed": {
+      "chance": 0.3
+    },
+    "dtspectrum:red_seed": {
+      "chance": 0.3
+    },
+    "dtspectrum:white_seed": {
+      "chance": 0.3
+    },
+    "dtspectrum:yellow_seed": {
+      "chance": 0.3
+    }
+  }
+}

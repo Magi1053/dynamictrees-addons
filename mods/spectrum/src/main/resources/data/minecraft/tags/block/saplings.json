@@ -1,0 +1,21 @@
+{
+  "replace": false,
+  "values": [
+    "dtspectrum:black_sapling",
+    "dtspectrum:blue_sapling",
+    "dtspectrum:brown_sapling",
+    "dtspectrum:cyan_sapling",
+    "dtspectrum:gray_sapling",
+    "dtspectrum:green_sapling",
+    "dtspectrum:light_blue_sapling",
+    "dtspectrum:light_gray_sapling",
+    "dtspectrum:lime_sapling",
+    "dtspectrum:magenta_sapling",
+    "dtspectrum:orange_sapling",
+    "dtspectrum:pink_sapling",
+    "dtspectrum:purple_sapling",
+    "dtspectrum:red_sapling",
+    "dtspectrum:white_sapling",
+    "dtspectrum:yellow_sapling"
+  ]
+}

@@ -212,7 +212,7 @@ function copyLootFromBirch(color) {
 }
 
 function writeSaplingLootOverride(color) {
-    writeJson(join(outRoot, "data", "spectrum", "loot_table", "blocks", `${color}_sapling.json`), {
+    const seedDrop = {
         type: "minecraft:block",
         pools: [
             {
@@ -231,7 +231,221 @@ function writeSaplingLootOverride(color) {
                 ],
             },
         ],
+    };
+    writeJson(join(outRoot, "data", "spectrum", "loot_table", "blocks", `${color}_sapling.json`), seedDrop);
+    writeJson(join(outRoot, "data", "spectrum", "loot_table", "blocks", `potted_${color}_sapling.json`), {
+        type: "minecraft:block",
+        pools: [
+            {
+                rolls: 1.0,
+                bonus_rolls: 0.0,
+                entries: [{ type: "minecraft:item", name: "minecraft:flower_pot" }],
+                conditions: [{ condition: "minecraft:survives_explosion" }],
+            },
+            {
+                rolls: 1.0,
+                bonus_rolls: 0.0,
+                entries: [{ type: "minecraft:item", name: `${TREE_NS}:${color}_seed` }],
+                conditions: [{ condition: "minecraft:survives_explosion" }],
+            },
+        ],
     });
+}
+
+const EMPTY_PEDESTAL_PIGMENT = {
+    "spectrum:cyan": 0,
+    "spectrum:magenta": 0,
+    "spectrum:yellow": 0,
+    "spectrum:white": 0,
+    "spectrum:black": 0,
+};
+
+/** Spectrum pedestal pigment + tier for each colored sapling recipe. */
+const PEDESTAL_SAPLINGS = {
+    black: { tier: "advanced", colors: { ...EMPTY_PEDESTAL_PIGMENT, "spectrum:black": 6 } },
+    blue: { tier: "basic", colors: { ...EMPTY_PEDESTAL_PIGMENT, "spectrum:cyan": 3, "spectrum:magenta": 2, "spectrum:yellow": 1 } },
+    brown: { tier: "advanced", colors: { ...EMPTY_PEDESTAL_PIGMENT, "spectrum:magenta": 1, "spectrum:yellow": 2, "spectrum:black": 3 } },
+    cyan: { tier: "basic", colors: { ...EMPTY_PEDESTAL_PIGMENT, "spectrum:cyan": 6 } },
+    gray: { tier: "complex", colors: { ...EMPTY_PEDESTAL_PIGMENT, "spectrum:white": 2, "spectrum:black": 4 } },
+    green: { tier: "basic", colors: { ...EMPTY_PEDESTAL_PIGMENT, "spectrum:cyan": 2, "spectrum:magenta": 1, "spectrum:yellow": 3 } },
+    light_blue: { tier: "basic", colors: { ...EMPTY_PEDESTAL_PIGMENT, "spectrum:cyan": 4, "spectrum:magenta": 2 } },
+    light_gray: { tier: "complex", colors: { ...EMPTY_PEDESTAL_PIGMENT, "spectrum:white": 4, "spectrum:black": 2 } },
+    lime: { tier: "basic", colors: { ...EMPTY_PEDESTAL_PIGMENT, "spectrum:cyan": 2, "spectrum:yellow": 4 } },
+    magenta: { tier: "basic", colors: { ...EMPTY_PEDESTAL_PIGMENT, "spectrum:magenta": 6 } },
+    orange: { tier: "basic", colors: { ...EMPTY_PEDESTAL_PIGMENT, "spectrum:magenta": 2, "spectrum:yellow": 4 } },
+    pink: { tier: "basic", colors: { ...EMPTY_PEDESTAL_PIGMENT, "spectrum:magenta": 4, "spectrum:yellow": 2 } },
+    purple: { tier: "basic", colors: { ...EMPTY_PEDESTAL_PIGMENT, "spectrum:cyan": 2, "spectrum:magenta": 3, "spectrum:yellow": 1 } },
+    red: { tier: "basic", colors: { ...EMPTY_PEDESTAL_PIGMENT, "spectrum:magenta": 3, "spectrum:yellow": 3 } },
+    white: { tier: "complex", colors: { ...EMPTY_PEDESTAL_PIGMENT, "spectrum:white": 6 } },
+    yellow: { tier: "basic", colors: { ...EMPTY_PEDESTAL_PIGMENT, "spectrum:yellow": 6 } },
+};
+
+function rewriteColoredSaplingItemIds(value) {
+    if (typeof value === "string") {
+        for (const color of COLORS) {
+            if (value === `spectrum:${color}_sapling`) {
+                return `${TREE_NS}:${color}_seed`;
+            }
+        }
+        return value;
+    }
+    if (Array.isArray(value)) {
+        return value.map(rewriteColoredSaplingItemIds);
+    }
+    if (value && typeof value === "object") {
+        const out = {};
+        for (const [key, child] of Object.entries(value)) {
+            out[key] = rewriteColoredSaplingItemIds(child);
+        }
+        return out;
+    }
+    return value;
+}
+
+function resolveSpectrumJar() {
+    const candidates = [
+        spectrumJar,
+        join(repoRoot, "..", "skcraft-1.21", "src", "mods", "spectrum-1.11.9-1.21.1-neo.jar"),
+    ];
+    return candidates.find((path) => existsSync(path));
+}
+
+function readSpectrumJarJson(jarPath, entry) {
+    const tempExtract = join(__dirname, ".extract-tmp");
+    mkdirSync(tempExtract, { recursive: true });
+    try {
+        execSync(`"${javaJar}" xf "${jarPath}" ${entry}`, { cwd: tempExtract, stdio: "pipe" });
+        const extracted = join(tempExtract, ...entry.split("/"));
+        if (!existsSync(extracted)) {
+            return null;
+        }
+        return JSON.parse(readFileSync(extracted, "utf8"));
+    } catch {
+        return null;
+    }
+}
+
+/** Pedestal / crushing / leaf loot / tags: Spectrum saplings become DT seeds 1:1. */
+function writePrimitiveSaplingReplacement() {
+    const seeds = COLORS.map((color) => `${TREE_NS}:${color}_seed`);
+    const saplingBlocks = COLORS.map((color) => `${TREE_NS}:${color}_sapling`);
+
+    writeJson(join(outRoot, "data", "spectrum", "tags", "item", "colored_saplings.json"), {
+        replace: false,
+        values: seeds,
+    });
+    writeJson(join(outRoot, "data", "spectrum", "tags", "block", "colored_saplings.json"), {
+        replace: false,
+        values: saplingBlocks,
+    });
+    writeJson(join(outRoot, "data", "spectrum", "tags", "block", "saplings.json"), {
+        replace: false,
+        values: saplingBlocks,
+    });
+    writeJson(join(outRoot, "data", "minecraft", "tags", "item", "saplings.json"), {
+        replace: false,
+        values: seeds,
+    });
+    writeJson(join(outRoot, "data", "minecraft", "tags", "block", "saplings.json"), {
+        replace: false,
+        values: saplingBlocks,
+    });
+    writeJson(join(outRoot, "data", "moonlight", "tags", "item", "non_recolorable.json"), {
+        replace: false,
+        values: seeds,
+    });
+    writeJson(join(outRoot, "data", "moonlight", "tags", "block", "non_recolorable.json"), {
+        replace: false,
+        values: saplingBlocks,
+    });
+    writeJson(join(outRoot, "data", "supplementaries", "tags", "item", "non_cleanable.json"), {
+        replace: false,
+        values: seeds,
+    });
+    writeJson(join(outRoot, "data", "supplementaries", "tags", "block", "non_cleanable.json"), {
+        replace: false,
+        values: saplingBlocks,
+    });
+
+    const compostValues = {};
+    for (const color of COLORS) {
+        compostValues[`${TREE_NS}:${color}_seed`] = { chance: 0.3 };
+    }
+    writeJson(join(outRoot, "data", "neoforge", "data_maps", "item", "compostables.json"), { values: compostValues });
+
+    const ink = {};
+    for (const color of COLORS) {
+        ink[`spectrum:${color}`] = [`${TREE_NS}:${color}_seed`];
+    }
+    writeJson(join(outRoot, "data", "spectrum", "ink_color_mapping", "item", "dtspectrum.json"), ink);
+
+    for (const color of COLORS) {
+        const spec = PEDESTAL_SAPLINGS[color];
+        writeJson(join(outRoot, "data", "spectrum", "recipe", "pedestal", "tier1", "saplings", `${color}.json`), {
+            type: "spectrum:pedestal",
+            group: "colored_saplings",
+            time: 160,
+            tier: spec.tier,
+            colors: spec.colors,
+            experience: 1.0,
+            pattern: ["DDD", "VSV", "DDD"],
+            key: {
+                S: "#minecraft:saplings",
+                V: "spectrum:vegetal",
+                D: `minecraft:${color}_dye`,
+            },
+            result: { id: `${TREE_NS}:${color}_seed`, count: 1 },
+            required_advancement: `spectrum:unlocks/colored_saplings/${color}_sapling`,
+        });
+
+        writeJson(join(outRoot, "data", "spectrum", "recipe", "mod_integration", "create", "crushing", "leaves", `${color}.json`), {
+            type: "create:crushing",
+            ingredients: [{ item: `spectrum:${color}_leaves` }],
+            results: [
+                { id: `spectrum:${color}_pigment`, count: 1, chance: 1.0 },
+                { id: `${TREE_NS}:${color}_seed`, count: 1, chance: 0.02 },
+            ],
+            processing_time: 450,
+            "neoforge:conditions": [{ type: "neoforge:mod_loaded", modid: "create" }],
+        });
+    }
+
+    const jarPath = resolveSpectrumJar();
+    const tempExtract = join(__dirname, ".extract-tmp");
+    if (jarPath) {
+        for (const color of COLORS) {
+            for (const entry of [
+                `data/spectrum/loot_table/blocks/${color}_leaves.json`,
+                `data/spectrum/recipe/mod_integration/neepmeat/advanced_crushing/leaves/${color}.json`,
+            ]) {
+                const json = readSpectrumJarJson(jarPath, entry);
+                if (json) {
+                    writeJson(join(outRoot, ...entry.split("/")), rewriteColoredSaplingItemIds(json));
+                }
+            }
+        }
+        const guidebookEntry = "data/spectrum/modonomicon/books/guidebook/entries/general/colored_trees.json";
+        const guidebook = readSpectrumJarJson(jarPath, guidebookEntry);
+        if (guidebook) {
+            const rewritten = rewriteColoredSaplingItemIds(guidebook);
+            if (rewritten.icon && rewritten.icon.item) {
+                rewritten.icon.item = `${TREE_NS}:red_seed`;
+            }
+            if (Array.isArray(rewritten.pages)) {
+                for (const page of rewritten.pages) {
+                    if (typeof page.title === "string") {
+                        for (const color of COLORS) {
+                            if (page.title === `block.spectrum.${color}_sapling`) {
+                                page.title = `item.${TREE_NS}.${color}_seed`;
+                            }
+                        }
+                    }
+                }
+            }
+            writeJson(join(outRoot, ...guidebookEntry.split("/")), rewritten);
+        }
+        rmSync(tempExtract, { recursive: true, force: true });
+    }
 }
 
 function writeTreeAssets(color) {
@@ -433,6 +647,7 @@ writeJson(join(outRoot, "pack.mcmeta"), {
 
 writeRevelationCloaks();
 writeDynamictreesBranchTags();
+writePrimitiveSaplingReplacement();
 
 if (existsSync(bundledAssets)) {
     cpSync(bundledAssets, outRoot, { recursive: true });

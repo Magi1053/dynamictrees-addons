@@ -1,0 +1,50 @@
+{
+  "spectrum:black": [
+    "dtspectrum:black_seed"
+  ],
+  "spectrum:blue": [
+    "dtspectrum:blue_seed"
+  ],
+  "spectrum:brown": [
+    "dtspectrum:brown_seed"
+  ],
+  "spectrum:cyan": [
+    "dtspectrum:cyan_seed"
+  ],
+  "spectrum:gray": [
+    "dtspectrum:gray_seed"
+  ],
+  "spectrum:green": [
+    "dtspectrum:green_seed"
+  ],
+  "spectrum:light_blue": [
+    "dtspectrum:light_blue_seed"
+  ],
+  "spectrum:light_gray": [
+    "dtspectrum:light_gray_seed"
+  ],
+  "spectrum:lime": [
+    "dtspectrum:lime_seed"
+  ],
+  "spectrum:magenta": [
+    "dtspectrum:magenta_seed"
+  ],
+  "spectrum:orange": [
+    "dtspectrum:orange_seed"
+  ],
+  "spectrum:pink": [
+    "dtspectrum:pink_seed"
+  ],
+  "spectrum:purple": [
+    "dtspectrum:purple_seed"
+  ],
+  "spectrum:red": [
+    "dtspectrum:red_seed"
+  ],
+  "spectrum:white": [
+    "dtspectrum:white_seed"
+  ],
+  "spectrum:yellow": [
+    "dtspectrum:yellow_seed"
+  ]
+}

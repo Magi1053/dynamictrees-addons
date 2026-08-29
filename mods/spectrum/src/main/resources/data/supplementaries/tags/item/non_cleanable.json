@@ -1,0 +1,21 @@
+{
+  "replace": false,
+  "values": [
+    "dtspectrum:black_seed",
+    "dtspectrum:blue_seed",
+    "dtspectrum:brown_seed",
+    "dtspectrum:cyan_seed",
+    "dtspectrum:gray_seed",
+    "dtspectrum:green_seed",
+    "dtspectrum:light_blue_seed",
+    "dtspectrum:light_gray_seed",
+    "dtspectrum:lime_seed",
+    "dtspectrum:magenta_seed",
+    "dtspectrum:orange_seed",
+    "dtspectrum:pink_seed",
+    "dtspectrum:purple_seed",
+    "dtspectrum:red_seed",
+    "dtspectrum:white_seed",
+    "dtspectrum:yellow_seed"
+  ]
+}
