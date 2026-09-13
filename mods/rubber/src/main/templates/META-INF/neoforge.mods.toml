@@ -34,6 +34,13 @@ ordering="AFTER"
 side="BOTH"
 
 [[dependencies.${mod_id}]]
+modId="emi"
+type="optional"
+versionRange="[1.0.0,)"
+ordering="NONE"
+side="CLIENT"
+
+[[dependencies.${mod_id}]]
 modId="create"
 type="optional"
 ordering="AFTER"

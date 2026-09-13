@@ -6,10 +6,12 @@ plugins {
 
 dependencies {
     compileOnly 'maven.modrinth:dynamictrees:1.7.2'
+    compileOnly 'maven.modrinth:emi:1.1.24+1.21.1+neoforge'
 }
 
 modrinth {
     dependencies {
         required.project 'dynamictrees'
+        optional.project 'emi'
     }
 }
