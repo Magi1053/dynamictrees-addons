@@ -1,6 +1,9 @@
 {
   "values": [
-    "dtmeadow:stripped_alpine_birch_branch",
+    {
+      "id": "dtmeadow:stripped_alpine_birch_branch",
+      "required": false
+    },
     "dtmeadow:stripped_pine_branch"
   ]
 }

@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.48
+
+- Fixed cutting speed
+
 ## 1.0.47
 
 - EMI Information page for collecting Raw Latex.
