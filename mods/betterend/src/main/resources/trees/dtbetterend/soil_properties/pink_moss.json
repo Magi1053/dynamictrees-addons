@@ -2,6 +2,5 @@
   "primitive_soil": "betterend:pink_moss",
   "acceptable_soils": [
     "pink_moss"
-  ],
-  "substitute_soil": "minecraft:end_stone"
+  ]
 }

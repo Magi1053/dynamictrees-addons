@@ -7,10 +7,9 @@
   "growth_rate": 1.5,
   "growth_logic_kit": "dtbetterend:dragon_tree",
   "leaves_properties": "dtbetterend:dragon_tree",
-  "environment_factors": {
-    "is_end": 1.05,
-    "is_overworld": 0.95
-  },
+  "preferred_climate": "temperate",
+  "climate_tolerance": 1.0,
+  "does_rot": false,
   "perfect_biomes": {
     "name": "betterend:shadow_forest"
   },

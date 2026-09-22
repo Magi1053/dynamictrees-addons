@@ -1,9 +1,8 @@
 [
   {
-    "__comment": "Cancel BetterEnd static tree/bush features in End biomes for Dynamic Trees.",
+    "__comment": "Cancel BetterEnd static tree/bush features. Select by biome id only: BetterEnd land biomes are in #wover:is_end/land, not #minecraft:is_end.",
     "select": {
-      "name": "betterend:.*",
-      "tag": "#minecraft:is_end"
+      "name": "betterend:.*"
     },
     "cancellers": {
       "type": "dtbetterend:betterend_tree"

@@ -3,7 +3,7 @@
     "package": "com.skcraft.dtbetterend.mixin",
     "compatibilityLevel": "JAVA_21",
     "mixins": [
-        "MixinTenaneaBushFeature"
+        "MixinBetterEndTreeFeatures"
     ],
     "client": [],
     "injectors": {
