@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.2
+
+- Better end fixes
+
 ## 1.0.1
 
 - Lucernia dynamic leaves now use BetterEnd's numbered leaf models instead of a missing `lucernia_leaves` model.

@@ -3,5 +3,6 @@
   "primitive_leaves": "betterend:lucernia_leaves",
   "cell_kit": "dynamictrees:dark_oak",
   "smother": 4,
+  "light_requirement": 0,
   "outer_block": "betterend:lucernia_outer_leaves"
 }
