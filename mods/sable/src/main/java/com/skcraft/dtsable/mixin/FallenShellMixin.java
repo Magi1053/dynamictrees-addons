@@ -6,7 +6,9 @@ import com.skcraft.dtsable.dt.DtSableConfig;
 import com.skcraft.dtsable.tree.FallenTreeBody;
 import com.skcraft.dtsable.tree.FallenTreeRegistry;
 import com.skcraft.dtsable.tree.TreeHarvest;
+import com.skcraft.dtsable.tree.WoodChop;
 import com.skcraft.dtsable.tree.WoodThickness;
+import dev.ryanhcode.sable.Sable;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.BlockGetter;
@@ -24,7 +26,8 @@ public abstract class FallenShellMixin {
     private void dtsable$coreProgress(BlockState state, Player player, BlockGetter getter, BlockPos pos,
                                       CallbackInfoReturnable<Float> cir) {
         if (!DtSableConfig.isEnabled() || !(getter instanceof Level level)) return;
-        if (!FallenTreeRegistry.hasFallenMiningContext(level, pos)) return;
+        boolean standing = Sable.HELPER.getContaining(level, pos) == null;
+        if (!standing && !FallenTreeRegistry.hasFallenMiningContext(level, pos)) return;
         FallenTreeBody body = FallenTreeRegistry.find(level, pos).orElse(null);
         BlockPos core;
         if (body != null) {
@@ -37,9 +40,14 @@ public abstract class FallenShellMixin {
         if (core == null) return;
         BlockState coreState = getter.getBlockState(core);
         if (!(coreState.getBlock() instanceof com.dtteam.dynamictrees.block.branch.BranchBlock branch)) return;
-        float scale = Math.max(1.0f, WoodThickness.radius(coreState) / 8.0f);
-        cir.setReturnValue(DtIntegration.primitiveLog(branch).defaultBlockState().getDestroyProgress(player, getter, core)
-                * DtSableConfig.fallenWoodMiningSpeed() / scale);
+        float progress = DtIntegration.primitiveLog(branch).defaultBlockState().getDestroyProgress(player, getter, core);
+        if (standing) {
+            cir.setReturnValue(progress * WoodChop.relativeToPrimitiveLog(
+                    DtSableConfig.standingWoodMiningSpeed(), WoodThickness.radius(coreState), true));
+        } else {
+            float scale = Math.max(1.0f, WoodThickness.radius(coreState) / 8.0f);
+            cir.setReturnValue(progress * DtSableConfig.fallenWoodMiningSpeed() / scale);
+        }
     }
 
     @Inject(method = "onDestroyedByPlayer", at = @At("HEAD"), cancellable = true)

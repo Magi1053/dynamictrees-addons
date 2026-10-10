@@ -1,5 +1,6 @@
 package com.skcraft.dtsable.physics;
 
+import com.skcraft.dtsable.dt.DtIntegration;
 import com.skcraft.dtsable.dt.DtSableConfig;
 import com.skcraft.dtsable.tree.FallenTreeRegistry;
 import com.skcraft.dtsable.tree.WoodThickness;
@@ -9,7 +10,6 @@ import dev.ryanhcode.sable.companion.math.JOMLConversion;
 import dev.ryanhcode.sable.sublevel.system.SubLevelPhysicsSystem;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.block.state.BlockState;
 import org.joml.Vector3d;
 
@@ -25,7 +25,11 @@ public final class FallenTreeCollision implements BlockSubLevelCollisionCallback
         ServerLevel level = SubLevelPhysicsSystem.getCurrentlySteppingSystem().getLevel();
         BlockState state = level.getBlockState(pos);
         if (!DtSableConfig.isEnabled() || FallenTreeRegistry.find(level, pos).isEmpty()) {
-            return state.is(BlockTags.LEAVES) ? REMOVE_CONTACT : CollisionResult.NONE;
+            return DtIntegration.isLeaves(state) ? REMOVE_CONTACT : CollisionResult.NONE;
+        }
+        if (otherPos != null && !level.getFluidState(otherPos).isEmpty()) {
+            FallenTreeRegistry.noteWater(level, pos);
+            return CollisionResult.NONE;
         }
         if (Math.abs(impactVelocity) >= 0.25) FallenTreeRegistry.noteCollision(level, pos);
 
@@ -35,8 +39,8 @@ public final class FallenTreeCollision implements BlockSubLevelCollisionCallback
             return REMOVE_CONTACT;
         }
 
-        boolean otherIsLeaf = otherPos != null && level.getBlockState(otherPos).is(BlockTags.LEAVES);
-        if (state.is(BlockTags.LEAVES)) {
+        boolean otherIsLeaf = otherPos != null && DtIntegration.isLeaves(level.getBlockState(otherPos));
+        if (DtIntegration.isLeaves(state)) {
             if (Math.abs(impactVelocity) >= DtSableConfig.leafCollisionBreakVelocity()) {
                 FallenTreeRegistry.scheduleCollisionSnap(level, pos);
                 return REMOVE_CONTACT;
@@ -56,7 +60,7 @@ public final class FallenTreeCollision implements BlockSubLevelCollisionCallback
 
     private static BlockPos findStandingLeaf(ServerLevel level, BlockPos otherPos, Vector3d impactPosition) {
         if (otherPos != null && Sable.HELPER.getContaining(level, otherPos) == null
-                && level.getBlockState(otherPos).is(BlockTags.LEAVES)) return otherPos.immutable();
+                && DtIntegration.isLeaves(level.getBlockState(otherPos))) return otherPos.immutable();
         if (otherPos != null) return null;
 
         BlockPos best = null;
@@ -66,7 +70,7 @@ public final class FallenTreeCollision implements BlockSubLevelCollisionCallback
             for (int sz = -1; sz <= 1; sz += 2) {
                 BlockPos candidate = BlockPos.containing(impactPosition.x + sx * epsilon,
                         impactPosition.y + sy * epsilon, impactPosition.z + sz * epsilon);
-                if (!level.getBlockState(candidate).is(BlockTags.LEAVES)
+                if (!DtIntegration.isLeaves(level.getBlockState(candidate))
                         || Sable.HELPER.getContaining(level, candidate) != null) continue;
                 double distance = candidate.distToCenterSqr(impactPosition.x, impactPosition.y, impactPosition.z);
                 if (distance < bestDistance) {

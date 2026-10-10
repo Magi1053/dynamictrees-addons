@@ -2,11 +2,14 @@ package com.skcraft.dtsable.tree;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.function.ToDoubleFunction;
+import java.util.function.ToIntFunction;
 
 /** Dependency-free graph and weighted-center algorithms. */
 public final class TreeTopology {
@@ -35,6 +38,61 @@ public final class TreeTopology {
         }
         components.sort((left, right) -> Integer.compare(right.size(), left.size()));
         return List.copyOf(components);
+    }
+
+    /**
+     * Nodes from {@code cut} out to the tips. The thickest endpoint is the base, so a look there
+     * covers the whole graph and each step away leaves the near side behind.
+     */
+    public static <P> Set<P> cascade(Set<P> nodes, P cut, ToIntFunction<P> radius, Function<P, Iterable<P>> neighbors) {
+        if (nodes.isEmpty() || !nodes.contains(cut)) return Set.of();
+        return awayFrom(nodes, cut, baseEnd(nodes, radius, neighbors), neighbors);
+    }
+
+    /** Nodes from {@code cut} away from {@code root}. The root itself counts the whole graph. */
+    public static <P> Set<P> awayFrom(Set<P> nodes, P cut, P root, Function<P, Iterable<P>> neighbors) {
+        if (nodes.isEmpty() || cut == null || !nodes.contains(cut)) return Set.of();
+        if (root == null || !nodes.contains(root) || root.equals(cut)) return new HashSet<>(nodes);
+        Map<P, P> parent = new HashMap<>();
+        ArrayDeque<P> queue = new ArrayDeque<>();
+        parent.put(root, root);
+        queue.add(root);
+        while (!queue.isEmpty()) {
+            P current = queue.removeFirst();
+            for (P next : neighbors.apply(current)) {
+                if (nodes.contains(next) && parent.putIfAbsent(next, current) == null) queue.add(next);
+            }
+        }
+        if (!parent.containsKey(cut)) return Set.of(cut);
+        P towardRoot = parent.get(cut);
+        Set<P> cascade = new HashSet<>();
+        ArrayDeque<P> flood = new ArrayDeque<>();
+        cascade.add(cut);
+        flood.add(cut);
+        while (!flood.isEmpty()) {
+            P current = flood.removeFirst();
+            for (P next : neighbors.apply(current)) {
+                if (nodes.contains(next) && !next.equals(towardRoot) && cascade.add(next)) flood.add(next);
+            }
+        }
+        return cascade;
+    }
+
+    private static <P> P baseEnd(Set<P> nodes, ToIntFunction<P> radius, Function<P, Iterable<P>> neighbors) {
+        P best = null;
+        int bestRadius = Integer.MIN_VALUE;
+        int bestDegree = Integer.MAX_VALUE;
+        for (P pos : nodes) {
+            int degree = 0;
+            for (P next : neighbors.apply(pos)) if (nodes.contains(next)) degree++;
+            int at = radius.applyAsInt(pos);
+            if (best == null || at > bestRadius || (at == bestRadius && degree < bestDegree)) {
+                best = pos;
+                bestRadius = at;
+                bestDegree = degree;
+            }
+        }
+        return best;
     }
 
     public static <P> Set<P> flood(P start, Set<P> allowed, Function<P, Iterable<P>> neighbors) {

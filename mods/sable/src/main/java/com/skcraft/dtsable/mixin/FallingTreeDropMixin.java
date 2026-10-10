@@ -24,7 +24,7 @@ public abstract class FallingTreeDropMixin {
                                         CallbackInfoReturnable<FallingTreeEntity> cir) {
         if (!(level instanceof ServerLevel server) || level.isClientSide || !DtSableConfig.isEnabled()
                 || DtIntegration.isMutatingBody() || !DtIntegration.supported(type)) return;
-        if (TreeAssembler.tryAssemble(server, FellContext.player(), data, drops) != null) {
+        if (TreeAssembler.tryAssemble(server, FellContext.player(), data) != null) {
             FellContext.markConverted();
             cir.setReturnValue(null);
         }

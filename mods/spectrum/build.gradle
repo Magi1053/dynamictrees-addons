@@ -9,6 +9,10 @@ dependencies {
     compileOnly 'maven.modrinth:emi:1.1.24+1.21.1+neoforge'
     compileOnly 'maven.modrinth:revelationary:1.5.0+1.21.1'
     compileOnly 'maven.modrinth:spectrum:1.11.9-1.21.1-neo'
+    runtimeOnly 'maven.modrinth:revelationary:1.5.0+1.21.1'
+    runtimeOnly 'maven.modrinth:spectrum:1.11.9-1.21.1-neo'
+    runtimeOnly 'maven.modrinth:modonomicon:1.21.1-1.120.7'
+    runtimeOnly 'maven.modrinth:curios:9.5.1+1.21.1'
 }
 
 modrinth {

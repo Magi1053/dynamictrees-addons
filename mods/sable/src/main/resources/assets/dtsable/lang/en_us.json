@@ -8,9 +8,11 @@
     "dtsable.configuration.branch_collision_break_velocity": "Branch collision break velocity",
     "dtsable.configuration.leaf_collision_break_velocity": "Leaf collision break velocity",
     "dtsable.configuration.max_blocks": "Max blocks per falling tree",
+    "dtsable.configuration.standing_wood_mining_speed": "Standing wood mining speed",
     "dtsable.configuration.fallen_wood_mining_speed": "Fallen wood mining speed",
     "dtsable.configuration.fallen_wood_mass_multiplier": "Fallen wood mass multiplier",
     "dtsable.configuration.fallen_wood_friction": "Fallen wood friction",
     "dtsable.configuration.leaf_break_on_impact": "Break leaves on impact",
-    "dtsable.configuration.leaf_decay_ticks": "Leaf decay delay (ticks)"
+    "dtsable.configuration.leaf_decay_ticks": "Leaf decay delay (ticks)",
+    "config.jade.plugin_dtsable.harvest_hint": "Fallen chop drops"
 }

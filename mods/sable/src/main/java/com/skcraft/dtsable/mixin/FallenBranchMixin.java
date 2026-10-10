@@ -6,7 +6,9 @@ import com.skcraft.dtsable.dt.DtIntegration;
 import com.skcraft.dtsable.dt.DtSableConfig;
 import com.skcraft.dtsable.physics.FallenTreeCollision;
 import com.skcraft.dtsable.tree.FallenTreeRegistry;
+import com.skcraft.dtsable.tree.WoodChop;
 import com.skcraft.dtsable.tree.WoodThickness;
+import dev.ryanhcode.sable.Sable;
 import dev.ryanhcode.sable.api.block.BlockWithSubLevelCollisionCallback;
 import dev.ryanhcode.sable.api.physics.callback.BlockSubLevelCollisionCallback;
 import net.minecraft.core.BlockPos;
@@ -27,9 +29,19 @@ public abstract class FallenBranchMixin extends BranchBlock implements BlockWith
 
     @Override
     public float getDestroyProgress(BlockState state, Player player, BlockGetter getter, BlockPos pos) {
-        if (!DtSableConfig.isEnabled() || !(getter instanceof Level level)
-                || !FallenTreeRegistry.hasFallenMiningContext(level, pos)) return super.getDestroyProgress(state, player, getter, pos);
+        if (!DtSableConfig.isEnabled() || !(getter instanceof Level level)) {
+            return super.getDestroyProgress(state, player, getter, pos);
+        }
         BlockState primitive = DtIntegration.primitiveLog(this).defaultBlockState();
+        if (Sable.HELPER.getContaining(level, pos) == null) {
+            float progress = primitive.getDestroyProgress(player, getter, pos)
+                    * WoodChop.relativeToPrimitiveLog(DtSableConfig.standingWoodMiningSpeed(),
+                    WoodThickness.radius(state), true);
+            return progress > 0.0f ? progress : super.getDestroyProgress(state, player, getter, pos);
+        }
+        if (!FallenTreeRegistry.hasFallenMiningContext(level, pos)) {
+            return super.getDestroyProgress(state, player, getter, pos);
+        }
         float scale = Math.max(1.0f, WoodThickness.radius(state) / 8.0f);
         float progress = primitive.getDestroyProgress(player, getter, pos)
                 * DtSableConfig.fallenWoodMiningSpeed() / scale;

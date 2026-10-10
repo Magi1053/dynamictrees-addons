@@ -3,6 +3,7 @@ package com.skcraft.dtsable.tree;
 import com.dtteam.dynamictrees.block.branch.BranchBlock;
 import com.dtteam.dynamictrees.block.branch.TrunkShellBlock;
 import com.dtteam.dynamictrees.tree.species.Species;
+import com.skcraft.dtsable.dt.DtIntegration;
 import dev.ryanhcode.sable.Sable;
 import dev.ryanhcode.sable.api.sublevel.ServerSubLevelContainer;
 import dev.ryanhcode.sable.api.sublevel.SubLevelContainer;
@@ -14,7 +15,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.Level;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.event.tick.LevelTickEvent;
@@ -34,9 +34,15 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class FallenTreeRegistry {
     private static final String MANAGED_TAG = "dtsable_managed_tree";
     private static final String SPECIES_TAG = "dtsable_species";
+    private static final String BASE_RADIUS_TAG = "dtsable_base_radius";
+    private static final String ESTABLISHED_TAG = "dtsable_established_tree";
+    /** Flattened [branchIndex, volume, branchIndex, volume, ...] pairs. */
+    private static final String UNPAID_TAG = "dtsable_unpaid_volume";
     private static final Map<UUID, FallenTreeBody> BODIES = new ConcurrentHashMap<>();
     private static final Map<UUID, PendingTopple> PENDING_TOPPLES = new ConcurrentHashMap<>();
     private static final Map<UUID, Integer> SETTLING_BODIES = new ConcurrentHashMap<>();
+    private static final Map<UUID, Integer> WATER_BODIES = new ConcurrentHashMap<>();
+    private static final int WATER_DRAG_TICKS = 5;
     private static final Map<ServerLevel, java.util.Set<BlockPos>> PENDING_SNAPS = new ConcurrentHashMap<>();
     private static final Map<ServerLevel, java.util.Set<BlockPos>> PENDING_STANDING_LEAVES = new ConcurrentHashMap<>();
     private static final Map<Level, ArrayDeque<PendingSplit>> PENDING_SPLITS = new IdentityHashMap<>();
@@ -54,16 +60,36 @@ public final class FallenTreeRegistry {
         installObserver(level);
         register(body);
         ServerSubLevel subLevel = subLevel(level, body.id());
-        if (subLevel != null) {
-            CompoundTag tag = userData(subLevel);
-            tag.putBoolean(MANAGED_TAG, true);
-            tag.putString(SPECIES_TAG, body.species().getRegistryName().toString());
+        if (subLevel != null) persist(userData(subLevel), body);
+    }
+
+    private static void persist(CompoundTag tag, FallenTreeBody body) {
+        tag.putBoolean(MANAGED_TAG, true);
+        tag.putString(SPECIES_TAG, body.species().getRegistryName().toString());
+        tag.putInt(BASE_RADIUS_TAG, body.baseRadius());
+        tag.putBoolean(ESTABLISHED_TAG, body.establishedTree());
+        int[] unpaid = new int[body.unpaidVolume().size() * 2];
+        int i = 0;
+        for (Map.Entry<Integer, Integer> entry : body.unpaidVolume().entrySet()) {
+            unpaid[i++] = entry.getKey();
+            unpaid[i++] = entry.getValue();
         }
+        tag.putIntArray(UNPAID_TAG, unpaid);
+    }
+
+    private static Map<Integer, Integer> readUnpaid(CompoundTag tag) {
+        int[] pairs = tag.getIntArray(UNPAID_TAG);
+        Map<Integer, Integer> result = new HashMap<>();
+        for (int i = 0; i + 1 < pairs.length; i += 2) {
+            if (pairs[i + 1] > 0) result.put(pairs[i], pairs[i + 1]);
+        }
+        return result;
     }
     public static void forget(UUID id) {
         BODIES.remove(id);
         PENDING_TOPPLES.remove(id);
         SETTLING_BODIES.remove(id);
+        WATER_BODIES.remove(id);
     }
     public static Optional<FallenTreeBody> byId(UUID id) { return Optional.ofNullable(BODIES.get(id)); }
     public static Collection<FallenTreeBody> all() { return java.util.List.copyOf(BODIES.values()); }
@@ -83,6 +109,7 @@ public final class FallenTreeRegistry {
         Set<BlockPos> leaves = new HashSet<>();
         Set<BlockPos> shellPositions = new HashSet<>();
         Species species = null;
+        int inferredBaseRadius = 0;
         CompoundTag tag = userData(subLevel);
         ResourceLocation storedSpecies = ResourceLocation.tryParse(tag.getString(SPECIES_TAG));
         if (storedSpecies != null) {
@@ -96,10 +123,12 @@ public final class FallenTreeRegistry {
             var state = level.getBlockState(pos);
             if (state.getBlock() instanceof BranchBlock branch) {
                 wood.add(pos.immutable());
+                inferredBaseRadius = Math.max(inferredBaseRadius,
+                        DtIntegration.yieldRadius(state, WoodThickness.radius(state)));
                 if (species == null) species = branch.getFamily().getCommonSpecies();
             } else if (state.getBlock() instanceof TrunkShellBlock) {
                 shellPositions.add(pos.immutable());
-            } else if (state.is(BlockTags.LEAVES)) {
+            } else if (DtIntegration.isLeaves(state)) {
                 leaves.add(pos.immutable());
             }
         }
@@ -113,11 +142,16 @@ public final class FallenTreeRegistry {
             var muse = shell.getMuse(level, state, shellPos);
             if (muse != null && wood.contains(muse.pos())) shells.put(shellPos, muse.pos().immutable());
         }
+        int baseRadius = tag.contains(BASE_RADIUS_TAG) ? tag.getInt(BASE_RADIUS_TAG) : inferredBaseRadius;
+        boolean established = tag.contains(ESTABLISHED_TAG) ? tag.getBoolean(ESTABLISHED_TAG)
+                : FelledTreePlan.isEstablishedTree(baseRadius, wood.size(), endpointCount(wood));
+        // Bodies saved before the budget existed owe exactly the wood still standing in the plot.
+        Map<Integer, Integer> unpaid = tag.contains(UNPAID_TAG) ? readUnpaid(tag)
+                : WoodBudget.measure(level, wood, baseRadius, DtIntegration.lootVolumeScale(species));
         FallenTreeBody recovered = new FallenTreeBody(subLevel.getUniqueId(), level.dimension(), species,
-                wood, leaves, shells);
+                baseRadius, established, wood, leaves, shells, unpaid);
         FallenTreeBody existing = BODIES.putIfAbsent(recovered.id(), recovered);
-        tag.putBoolean(MANAGED_TAG, true);
-        tag.putString(SPECIES_TAG, recovered.species().getRegistryName().toString());
+        persist(tag, existing == null ? recovered : existing);
         installObserver(level);
         return existing == null ? recovered : existing;
     }
@@ -162,6 +196,11 @@ public final class FallenTreeRegistry {
         find(level, pos).ifPresent(body -> SETTLING_BODIES.put(body.id(), 30));
     }
 
+    /** A fluid hit keeps drag fresh for a few ticks and does not start ground settling. */
+    public static void noteWater(ServerLevel level, BlockPos pos) {
+        find(level, pos).ifPresent(body -> WATER_BODIES.put(body.id(), WATER_DRAG_TICKS));
+    }
+
     /** Capture direction now so later player movement/sneaking cannot change the fell. */
     public static void scheduleTopple(FallenTreeBody body, BlockPos cut,
                                       net.minecraft.world.entity.player.Player player) {
@@ -185,18 +224,24 @@ public final class FallenTreeRegistry {
                 if (split == null) return;
                 if (queue.isEmpty()) PENDING_SPLITS.remove(level);
                 BlockPos destination = server.getPlot().getCenterBlock();
-                FallenTreeBody child = new FallenTreeBody(server.getUniqueId(), level.dimension(), split.species(),
+                FallenTreeBody child = split.source().child(server.getUniqueId(),
                         translate(split.wood(), split.anchor(), destination),
                         translate(split.leaves(), split.anchor(), destination),
-                        translateOwners(split.shells(), split.anchor(), destination));
-                register(child);
-                FallenTreeBody source = BODIES.get(split.sourceId());
+                        translateOwners(split.shells(), split.anchor(), destination),
+                        split.unpaidVolume());
+                register(level, child);
+                FallenTreeBody source = BODIES.get(split.source().id());
                 if (source != null) {
                     java.util.Set<BlockPos> wood = difference(source.wood(), split.wood());
                     java.util.Set<BlockPos> leaves = difference(source.leaves(), split.leaves());
                     Map<BlockPos, BlockPos> shells = new HashMap<>(source.shellOwners());
                     split.shells().keySet().forEach(shells::remove);
-                    register(new FallenTreeBody(source.id(), source.dimension(), source.species(), wood, leaves, shells));
+                    Map<Integer, Integer> unpaid = new HashMap<>(source.unpaidVolume());
+                    split.unpaidVolume().forEach((index, moved) -> {
+                        int left = unpaid.getOrDefault(index, 0) - moved;
+                        if (left > 0) unpaid.put(index, left); else unpaid.remove(index);
+                    });
+                    register(level, source.withBlocks(wood, leaves, shells, unpaid));
                 }
             }
         });
@@ -214,8 +259,14 @@ public final class FallenTreeRegistry {
         java.util.Set<BlockPos> leaves = intersection(source.leaves(), blockSet);
         Map<BlockPos, BlockPos> shells = new HashMap<>();
         source.shellOwners().forEach((shell, core) -> { if (blockSet.contains(shell)) shells.put(shell, core); });
+        // The budget follows the wood volume that moves. Blocks are still in the source plot here.
+        double lootScale = DtIntegration.lootVolumeScale(source.species());
+        Map<Integer, Integer> unpaid = new HashMap<>(source.unpaidVolume());
+        Map<Integer, Integer> childBudget = WoodBudget.takeSplitShare(unpaid,
+                WoodBudget.measure(server, wood, source.baseRadius(), lootScale),
+                WoodBudget.measure(server, source.wood(), source.baseRadius(), lootScale));
         PENDING_SPLITS.computeIfAbsent(level, unused -> new ArrayDeque<>()).addLast(
-                new PendingSplit(source.id(), source.species(), blocks.iterator().next(), wood, leaves, shells));
+                new PendingSplit(source, blocks.iterator().next(), wood, leaves, shells, childBudget));
         installObserver(server);
     }
 
@@ -229,6 +280,18 @@ public final class FallenTreeRegistry {
         java.util.Set<BlockPos> result = new HashSet<>(source);
         result.retainAll(selected);
         return result;
+    }
+
+    private static int endpointCount(Set<BlockPos> wood) {
+        int endpoints = 0;
+        for (BlockPos pos : wood) {
+            int neighbors = 0;
+            for (net.minecraft.core.Direction direction : net.minecraft.core.Direction.values()) {
+                if (wood.contains(pos.relative(direction))) neighbors++;
+            }
+            if (neighbors <= 1) endpoints++;
+        }
+        return endpoints;
     }
 
     private static java.util.Set<BlockPos> translate(java.util.Set<BlockPos> input, BlockPos from, BlockPos to) {
@@ -278,13 +341,19 @@ public final class FallenTreeRegistry {
                 if (settlingTicks <= 1) SETTLING_BODIES.remove(body.id());
                 else SETTLING_BODIES.put(body.id(), settlingTicks - 1);
             }
+            Integer waterTicks = WATER_BODIES.get(body.id());
+            if (waterTicks != null) {
+                TreePhysics.dampInWater(subLevel, level);
+                if (waterTicks <= 1) WATER_BODIES.remove(body.id());
+                else WATER_BODIES.put(body.id(), waterTicks - 1);
+            }
         }
     }
     private record PendingTopple(double dx, double dz, int delayTicks, int attemptsLeft) {
         PendingTopple afterDelay() { return new PendingTopple(dx, dz, delayTicks - 1, attemptsLeft); }
         PendingTopple afterAttempt() { return new PendingTopple(dx, dz, 0, attemptsLeft - 1); }
     }
-    private record PendingSplit(UUID sourceId, com.dtteam.dynamictrees.tree.species.Species species,
-                                BlockPos anchor, java.util.Set<BlockPos> wood,
-                                java.util.Set<BlockPos> leaves, Map<BlockPos, BlockPos> shells) {}
+    private record PendingSplit(FallenTreeBody source, BlockPos anchor, java.util.Set<BlockPos> wood,
+                                java.util.Set<BlockPos> leaves, Map<BlockPos, BlockPos> shells,
+                                Map<Integer, Integer> unpaidVolume) {}
 }

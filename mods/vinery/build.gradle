@@ -8,6 +8,8 @@ dependencies {
     compileOnly 'maven.modrinth:dynamictrees:1.7.2'
     compileOnly 'maven.modrinth:emi:1.1.24+1.21.1+neoforge'
     compileOnly 'maven.modrinth:lets-do-vinery:1.5.3'
+    runtimeOnly 'maven.modrinth:lets-do-vinery:1.5.3'
+    runtimeOnly 'maven.modrinth:architectury-api:13.0.11+neoforge'
 }
 
 modrinth {

@@ -4,30 +4,6 @@ plugins {
     id 'com.modrinth.minotaur'
 }
 
-neoForge {
-    mods {
-        dtaether {
-            sourceSet sourceSets.main
-        }
-    }
-
-    runs {
-        client {
-            client()
-            systemProperty 'forge.logging.console.level', 'info'
-            if (findProperty('smokeQuickPlay')) {
-                programArgument '--quickPlaySingleplayer'
-                programArgument smokeQuickPlay.toString()
-            }
-        }
-        server {
-            server()
-            programArgument '--nogui'
-            systemProperty 'forge.logging.console.level', 'info'
-        }
-    }
-}
-
 dependencies {
     compileOnly 'maven.modrinth:dynamictrees:1.7.2'
     compileOnly 'maven.modrinth:emi:1.1.24+1.21.1+neoforge'

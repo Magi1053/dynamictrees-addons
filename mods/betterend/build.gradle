@@ -11,6 +11,9 @@ dependencies {
 
     runtimeOnly 'maven.modrinth:dynamictrees:1.7.2'
     runtimeOnly 'maven.modrinth:betterend-neoforge:21.0.30'
+    runtimeOnly 'maven.modrinth:bclib-neoforge:21.0.24'
+    runtimeOnly 'maven.modrinth:worldweaver-neoforge:21.0.24'
+    runtimeOnly 'maven.modrinth:wunderlib-neoforge:21.0.10'
 }
 
 modrinth {

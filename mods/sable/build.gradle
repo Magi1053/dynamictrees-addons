@@ -17,16 +17,52 @@ repositories {
             includeGroup('dev.ryanhcode.sable-companion')
         }
     }
+    maven { url = 'https://maven.createmod.net' }
+    // Modrinth Maven publishes another loader's jar under these version numbers.
+    exclusiveContent {
+        forRepository {
+            ivy {
+                url = 'https://cdn.modrinth.com/data/8BmcQJ2H/versions/Grwn5rUB/'
+                patternLayout { artifact '[module]-[revision].[ext]' }
+                metadataSources { artifact() }
+            }
+        }
+        filter { includeModule('geckolib.neoforge', 'geckolib-neoforge-1.21.1') }
+    }
+    exclusiveContent {
+        forRepository {
+            ivy {
+                url = 'https://cdn.modrinth.com/data/kkmrDlKT/versions/6e8GCrLb/'
+                patternLayout { artifact '[module]-[revision].[ext]' }
+                metadataSources { artifact() }
+            }
+        }
+        filter { includeModule('terrablender.neoforge', 'TerraBlender-neoforge-1.21.1') }
+    }
 }
 
 dependencies {
     compileOnly "dev.ryanhcode.sable:sable-common-1.21.1:${sable_version}"
     compileOnly 'maven.modrinth:dynamictrees:1.7.2'
+    compileOnly 'maven.modrinth:jade:15.10.6+neoforge'
+    compileOnly 'maven.modrinth:create:6.0.10+mc1.21.1'
 
     // Dev client runtime. Sable NeoForge jars embed Veil; sable-common is compile-only to avoid a duplicate classpath.
     runtimeOnly 'maven.modrinth:dynamictrees:1.7.2'
     runtimeOnly "maven.modrinth:sable:${sable_version}+mc1.21.1"
     runtimeOnly 'maven.modrinth:jade:15.10.6+neoforge'
+    runtimeOnly 'maven.modrinth:create:6.0.10+mc1.21.1'
+    runtimeOnly 'dev.engine-room.flywheel:flywheel-neoforge-1.21.1:1.0.6'
+    runtimeOnly 'net.createmod.ponder:ponder-neoforge:1.0.85+mc1.21.1'
+    runtimeOnly 'maven.modrinth:create-aeronautics:1.3.2+mc1.21.1'
+    runtimeOnly 'maven.modrinth:oh-the-biomes-weve-gone:2.6.3-NeoForge'
+    runtimeOnly 'maven.modrinth:corgilib:1.21.1-5.0.0.10-NeoForge'
+    runtimeOnly 'maven.modrinth:oh-the-trees-youll-grow:1.21.1-5.3.5-NeoForge'
+    runtimeOnly 'terrablender.neoforge:TerraBlender-neoforge-1.21.1:4.1.0.8'
+    runtimeOnly 'geckolib.neoforge:geckolib-neoforge-1.21.1:4.9.3'
+    [':aether', ':betterend', ':meadow', ':rubber', ':spectrum', ':vinery'].each {
+        runtimeOnly project(it)
+    }
 
     testImplementation platform('org.junit:junit-bom:5.11.4')
     testImplementation 'org.junit.jupiter:junit-jupiter'
@@ -37,9 +73,14 @@ tasks.named('test', Test).configure {
     useJUnitPlatform()
 }
 
+tasks.withType(JavaCompile).configureEach {
+    options.compilerArgs.add('-Xlint:deprecation')
+}
+
 modrinth {
     dependencies {
         required.project 'dynamictrees'
         required.project 'sable'
+        required.project 'create'
     }
 }

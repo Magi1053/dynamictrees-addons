@@ -1,15 +1,27 @@
 {
     "required": true,
     "package": "com.skcraft.dtsable.mixin",
+    "plugin": "com.skcraft.dtsable.mixin.DtSableMixinPlugin",
     "compatibilityLevel": "JAVA_21",
     "mixins": [
         "BetterEndDebugMixin",
+        "BreakingPosAccessor",
+        "KineticSpeedAccessor",
         "FellingMixin",
         "FallingTreeDropMixin",
         "FallenBranchMixin",
         "FallenBranchInteractionMixin",
+        "FallenBranchStripMixin",
         "FallenTreeGameModeMixin",
         "FallenShellMixin",
+        "FallenLeafPoseMixin",
+        "FallenPoseCollisionMixin",
+        "FallenShellPoseMixin",
+        "FallenWoodPoseMixin",
+        "MechanicalDrillMixin",
+        "MechanicalSawMixin",
+        "PlayerPoseMixin",
+        "SawBreakerMixin",
         "ManagedTreeHeatMapMixin",
         "DynamicLeavesCollisionMixin",
         "DtWoodPhysicsPropertiesMixin",
@@ -18,7 +30,11 @@
         "ThickBranchRadiusMixin"
     ],
     "client": [
-        "ShellCrackOverlayMixin"
+        "ShellCrackOverlayMixin",
+        "WailaBranchVolumeMixin",
+        "RenderChunkRegionAccessor",
+        "BranchModelDataMixin",
+        "ThickBranchEndGrainMixin"
     ],
     "injectors": {
         "defaultRequire": 1

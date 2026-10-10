@@ -5,7 +5,6 @@ import com.dtteam.dynamictrees.tree.species.Species;
 import com.skcraft.dtsable.dt.DtIntegration;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.tags.ItemTags;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
@@ -19,31 +18,45 @@ import java.util.Set;
 public record FelledTreePlan(
         BlockPos cutPos,
         Species species,
+        int baseRadius,
+        boolean establishedTree,
         List<Node> branches,
         List<Node> leaves,
         List<ItemStack> cutDrops,
-        int deferredLogs,
         Set<BlockPos> sourcePositions,
         int estimatedBlocks) {
 
     public record Node(BlockPos pos, BlockState state, int radius) {}
 
-    public static FelledTreePlan create(ServerLevel level, BranchDestructionData data, List<ItemStack> suppliedDrops) {
+    public static FelledTreePlan create(ServerLevel level, BranchDestructionData data) {
         BlockPos cut = DtIntegration.cutPos(data);
         List<Node> branches = new ArrayList<>();
         List<Node> leaves = new ArrayList<>();
         Set<BlockPos> used = new HashSet<>();
         Set<BlockPos> source = new HashSet<>();
+        BlockPos base = DtIntegration.basePos(data);
+        BlockState baseState = base == null ? null : level.getBlockState(base);
+        int baseRadius = baseState == null ? 0 : DtIntegration.yieldRadius(baseState, DtIntegration.radius(baseState));
+        int fallbackRadius = 0;
         used.add(cut);
         source.add(cut);
         int shells = 0;
+        BlockState cutBranch = null;
         for (int i = 0; i < DtIntegration.branchCount(data); i++) {
             BlockPos pos = DtIntegration.branchPos(data, i);
             source.add(pos);
-            if (pos.equals(cut) || !used.add(pos)) continue;
             BlockState state = DtIntegration.branchState(data, i);
             int radius = DtIntegration.branchRadius(data, i);
+            if (pos.equals(cut)) {
+                if (state != null && !state.isAir()) cutBranch = state;
+                continue;
+            }
+            if (!used.add(pos)) continue;
             if (state == null || state.isAir() || radius <= 0) continue;
+            // A tree stripped while standing lost one radius per block; normalise to what it grew.
+            int grownRadius = DtIntegration.yieldRadius(state, radius);
+            fallbackRadius = Math.max(fallbackRadius, grownRadius);
+            if (pos.equals(base)) baseRadius = grownRadius;
             branches.add(new Node(pos.immutable(), state, radius));
             if (radius > WoodThickness.PRIMARY) shells += 8;
         }
@@ -55,20 +68,22 @@ public record FelledTreePlan(
             if (state != null && !state.isAir()) leaves.add(new Node(pos.immutable(), state, 0));
         }
 
-        List<ItemStack> drops = suppliedDrops == null || suppliedDrops.isEmpty()
-                ? DtIntegration.branchDrops(level, data) : suppliedDrops;
-        List<ItemStack> cutDrops = new ArrayList<>();
-        int logCount = 0;
-        for (ItemStack stack : drops) {
-            if (stack.isEmpty()) continue;
-            if (stack.is(ItemTags.LOGS) || stack.is(DtIntegration.primitiveLog(data).asItem())) logCount += stack.getCount();
-            else cutDrops.add(stack.copy());
-        }
-        cutDrops.addAll(DtIntegration.leavesDrops(data));
-        cutDrops.add(new ItemStack(DtIntegration.primitiveLog(data)));
-        return new FelledTreePlan(cut.immutable(), DtIntegration.species(data), List.copyOf(branches),
-                List.copyOf(leaves), copy(cutDrops), Math.max(0, logCount - 1), Set.copyOf(source),
+        List<ItemStack> cutDrops = List.of(new ItemStack(cutBranch == null
+                ? DtIntegration.primitiveLog(data)
+                : DtIntegration.primitiveLog(cutBranch, DtIntegration.species(data))));
+        baseRadius = Math.max(baseRadius, fallbackRadius);
+        boolean establishedTree = isEstablishedTree(baseRadius,
+                Math.max(DtIntegration.branchCount(data), DtIntegration.trunkHeight(data)),
+                DtIntegration.endpointCount(data));
+        return new FelledTreePlan(cut.immutable(), DtIntegration.species(data), baseRadius, establishedTree,
+                List.copyOf(branches),
+                List.copyOf(leaves), copy(cutDrops), Set.copyOf(source),
                 branches.size() + leaves.size() + shells);
+    }
+
+    /** Standing-tree classification persisted with the body. Loot does not read it. */
+    public static boolean isEstablishedTree(int baseRadius, int woodBlocks, int endpoints) {
+        return baseRadius >= WoodThickness.THRESHOLD && woodBlocks >= 5 && endpoints >= 2;
     }
 
     public boolean validate(int maxBlocks) {

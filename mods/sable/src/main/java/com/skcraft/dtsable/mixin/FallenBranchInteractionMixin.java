@@ -7,9 +7,13 @@ import com.skcraft.dtsable.dt.DtSableConfig;
 import com.skcraft.dtsable.tree.FallenTreeBody;
 import com.skcraft.dtsable.tree.FallenTreeRegistry;
 import com.skcraft.dtsable.tree.TreeHarvest;
+import dev.ryanhcode.sable.Sable;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.ItemInteractionResult;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
@@ -38,6 +42,51 @@ public abstract class FallenBranchInteractionMixin {
         }
         TreeHarvest.breakAt(server, resolved, player, false);
         cir.setReturnValue(false);
+    }
+
+    /**
+     * DT's axe strip walks to a root node. A fallen body has none, so standing strip never
+     * runs here. Resolve the looked-at plot block and strip that one branch ourselves.
+     */
+    @Inject(method = "useItemOn", at = @At("HEAD"), cancellable = true)
+    private void dtsable$stripFallen(ItemStack stack, BlockState state, Level level, BlockPos pos,
+                                     Player player, InteractionHand hand, BlockHitResult hit,
+                                     CallbackInfoReturnable<ItemInteractionResult> cir) {
+        if (!DtSableConfig.isEnabled()) return;
+        // Sable often calls this with an empty stack and a plot-local pos. DT's canBeStripped
+        // then returns false even when the player is holding an axe.
+        ItemStack tool = stack.isEmpty() ? player.getItemInHand(hand) : stack;
+        if (tool.isEmpty()) tool = player.getMainHandItem();
+        if (tool.isEmpty()) tool = player.getOffhandItem();
+        BranchBlock self = (BranchBlock) (Object) this;
+        if (level.isClientSide) {
+            if (Sable.HELPER.getContaining(level, pos) != null
+                    && self.canBeStripped(state, level, pos, player, tool)) {
+                cir.setReturnValue(ItemInteractionResult.SUCCESS);
+            }
+            return;
+        }
+        if (!(level instanceof ServerLevel server)) return;
+        BlockPos resolved = resolve(server, player, pos);
+        FallenTreeBody body = FallenTreeRegistry.find(server, resolved).orElse(null);
+        if (body == null) {
+            body = FallenTreeRegistry.find(server, pos).orElse(null);
+            if (body == null) return;
+            resolved = pos;
+        }
+        if (!body.wood().contains(resolved)) resolved = pos;
+        if (!body.wood().contains(resolved) && !body.owns(resolved)) return;
+        BlockPos core = body.shellOwners().getOrDefault(resolved, resolved);
+        BlockState before = server.getBlockState(core);
+        if (before.isAir()) before = state;
+        int radius = com.skcraft.dtsable.tree.WoodThickness.radius(before);
+        boolean alreadyStripped = self.isStrippedBranch() || DtIntegration.isStrippedBranch(before);
+        boolean dtCanStrip = self.canBeStripped(before, server, core, player, tool);
+        boolean axe = dtCanStrip || com.dtteam.dynamictrees.platform.Services.INTERACTION.canToolAxeStrip(tool);
+        if (alreadyStripped || radius <= 0 || !axe) return;
+        if (!self.getFamily().hasStrippedBranch()) return;
+        self.stripBranch(before, server, core, player, tool);
+        cir.setReturnValue(ItemInteractionResult.SUCCESS);
     }
 
     @Inject(method = "sloppyBreak", at = @At("HEAD"), cancellable = true)

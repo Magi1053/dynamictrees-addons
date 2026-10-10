@@ -3,7 +3,6 @@ package com.skcraft.dtsable.tree;
 import com.dtteam.dynamictrees.block.branch.BranchBlock;
 import com.dtteam.dynamictrees.block.branch.TrunkShellBlock;
 import com.skcraft.dtsable.dt.DtIntegration;
-import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.block.state.BlockState;
 
 /**
@@ -46,7 +45,7 @@ public final class WoodThickness {
     }
 
     public static boolean isAutoBreakable(BlockState state) {
-        return state.is(BlockTags.LEAVES) || isThinWood(state);
+        return DtIntegration.isLeaves(state) || isThinWood(state);
     }
 
     public static double scaledCollisionThreshold(int radius, double thickestThinThreshold) {

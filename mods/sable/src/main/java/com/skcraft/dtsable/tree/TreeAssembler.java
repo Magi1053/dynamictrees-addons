@@ -12,10 +12,10 @@ import dev.ryanhcode.sable.api.SubLevelAssemblyHelper;
 import dev.ryanhcode.sable.api.sublevel.SubLevelContainer;
 import dev.ryanhcode.sable.companion.math.BoundingBox3i;
 import dev.ryanhcode.sable.sublevel.ServerSubLevel;
+import dev.ryanhcode.sable.sublevel.storage.SubLevelRemovalReason;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.tags.BlockTags;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -37,11 +37,10 @@ public final class TreeAssembler {
     private static final int FLAGS = Block.UPDATE_CLIENTS;
     private TreeAssembler() {}
 
-    public static UUID tryAssemble(ServerLevel level, Player player, BranchDestructionData data,
-                                   List<ItemStack> woodDrops) {
+    public static UUID tryAssemble(ServerLevel level, Player player, BranchDestructionData data) {
         if (!DtSableConfig.isEnabled() || DtIntegration.isMutatingBody()
                 || SubLevelContainer.getContainer(level) == null) return null;
-        FelledTreePlan plan = FelledTreePlan.create(level, data, woodDrops);
+        FelledTreePlan plan = FelledTreePlan.create(level, data);
         // A DT FutureBreak can be emitted by blocks inside a Sable plot. Those coordinates
         // are plot-local storage, not standing-world coordinates, and must never recurse.
         if (Sable.HELPER.getContaining(level, plan.cutPos()) != null) return null;
@@ -60,21 +59,75 @@ public final class TreeAssembler {
     private static UUID convert(ServerLevel level, Player player, FelledTreePlan plan,
                                 Map<BlockPos, BlockState> source) {
         clearSource(level, source.keySet());
+        Map<BlockPos, FelledTreePlan.Node> branches = new HashMap<>();
+        Map<BlockPos, FelledTreePlan.Node> leaves = new HashMap<>();
+        plan.branches().forEach(node -> branches.put(node.pos(), node));
+        plan.leaves().forEach(node -> leaves.put(node.pos(), node));
+        List<TreeAssemblyPartition.Component<BlockPos>> components = TreeAssemblyPartition.partition(
+                branches.keySet(), leaves.keySet(), TreeAssembler::neighbors);
+        if (components.isEmpty()) throw new IllegalStateException("empty fell body");
+
+        List<ServerSubLevel> created = new ArrayList<>();
+        List<FallenTreeBody> bodies = new ArrayList<>();
+        try {
+            for (TreeAssemblyPartition.Component<BlockPos> component : components) {
+                FallenTreeBody body = assembleComponent(level, plan, component, branches, leaves, created);
+                bodies.add(body);
+                FallenTreeRegistry.register(level, body);
+            }
+        } catch (RuntimeException | StackOverflowError failure) {
+            for (ServerSubLevel subLevel : created) {
+                FallenTreeRegistry.forget(subLevel.getUniqueId());
+                if (!subLevel.isRemoved()) {
+                    SubLevelContainer.getContainer(level).removeSubLevel(subLevel, SubLevelRemovalReason.REMOVED);
+                }
+            }
+            throw failure;
+        }
+
+        for (FallenTreeBody body : bodies) FallenTreeRegistry.scheduleTopple(body, plan.cutPos(), player);
+        spawnDrops(level, plan.cutPos(), plan.cutDrops());
+        DtSable.LOGGER.info("Converted Dynamic Tree at {} to {} Sable bodies ({} branches, {} leaves)",
+                plan.cutPos(), bodies.size(), plan.branches().size(), plan.leaves().size());
+        return bodies.getFirst().id();
+    }
+
+    private static FallenTreeBody assembleComponent(ServerLevel level, FelledTreePlan plan,
+                                                     TreeAssemblyPartition.Component<BlockPos> component,
+                                                     Map<BlockPos, FelledTreePlan.Node> branches,
+                                                     Map<BlockPos, FelledTreePlan.Node> leaves,
+                                                     List<ServerSubLevel> created) {
         List<BlockPos> placed = new ArrayList<>();
         Set<BlockPos> worldWood = new HashSet<>();
         Set<BlockPos> worldLeaves = new HashSet<>();
         Map<BlockPos, BlockPos> worldShellOwners = new HashMap<>();
-        for (FelledTreePlan.Node node : plan.branches()) {
+        Map<Integer, Integer> unpaidVolume = new HashMap<>();
+        double lootScale = DtIntegration.lootVolumeScale(plan.species());
+        boolean unstrippedCore = false;
+        for (BlockPos pos : component.wood()) {
+            FelledTreePlan.Node node = branches.get(pos);
+            if (node == null) throw new IllegalStateException("missing planned branch");
             if (!level.getBlockState(node.pos()).canBeReplaced()) throw new IllegalStateException("fell target obstructed");
             level.setBlock(node.pos(), node.state(), FLAGS);
             placed.add(node.pos());
             worldWood.add(node.pos());
+            WoodBudget.add(unpaidVolume, node.state(), node.radius(), plan.baseRadius(), lootScale);
+            if (DtIntegration.yieldRadius(node.state(), node.radius()) >= WoodThickness.THRESHOLD
+                    && !DtIntegration.isStrippedBranch(node.state())) {
+                unstrippedCore = true;
+            }
             if (node.radius() > WoodThickness.PRIMARY && node.state().getBlock() instanceof ThickBranchBlock branch) {
                 branch.setRadius(level, node.pos(), node.radius(), Direction.DOWN, FLAGS);
                 collectShells(level, node.pos(), placed, worldShellOwners);
             }
         }
-        for (FelledTreePlan.Node node : plan.leaves()) {
+        if (!unstrippedCore) {
+            WoodBudget.foldUnstrippedIfAllCoresStripped(unpaidVolume,
+                    DtIntegration.strippedBranchIndex(plan.species()));
+        }
+        for (BlockPos pos : component.leaves()) {
+            FelledTreePlan.Node node = leaves.get(pos);
+            if (node == null) throw new IllegalStateException("missing planned leaves");
             if (!level.getBlockState(node.pos()).canBeReplaced()) continue;
             level.setBlock(node.pos(), node.state(), FLAGS);
             placed.add(node.pos());
@@ -86,16 +139,16 @@ public final class TreeAssembler {
         if (bounds == null) throw new IllegalStateException("missing body bounds");
         ServerSubLevel subLevel = SubLevelAssemblyHelper.assembleBlocks(level, anchor, placed, bounds.expand(1, 1, 1));
         if (subLevel == null || subLevel.isRemoved()) throw new IllegalStateException("Sable assembly failed");
+        created.add(subLevel);
         BlockPos plotAnchor = subLevel.getPlot().getCenterBlock();
-        FallenTreeBody body = new FallenTreeBody(subLevel.getUniqueId(), level.dimension(), plan.species(),
+        return new FallenTreeBody(subLevel.getUniqueId(), level.dimension(), plan.species(),
+                plan.baseRadius(), plan.establishedTree(),
                 translate(worldWood, anchor, plotAnchor), translate(worldLeaves, anchor, plotAnchor),
-                translateOwners(worldShellOwners, anchor, plotAnchor));
-        FallenTreeRegistry.register(level, body);
-        FallenTreeRegistry.scheduleTopple(body, plan.cutPos(), player);
-        spawnDrops(level, plan.cutPos(), plan.cutDrops());
-        DtSable.LOGGER.info("Converted Dynamic Tree at {} to Sable body {} ({} branches, {} leaves)",
-                plan.cutPos(), body.id(), body.wood().size(), body.leaves().size());
-        return body.id();
+                translateOwners(worldShellOwners, anchor, plotAnchor), unpaidVolume);
+    }
+
+    private static Iterable<BlockPos> neighbors(BlockPos pos) {
+        return java.util.Arrays.stream(Direction.values()).map(pos::relative).toList();
     }
 
     public static Map<BlockPos, BlockState> captureSource(ServerLevel level, FelledTreePlan plan) {
@@ -119,7 +172,7 @@ public final class TreeAssembler {
         for (BlockPos pos : positions) {
             BlockState state = level.getBlockState(pos);
             if (state.getBlock() instanceof BranchBlock || state.getBlock() instanceof TrunkShellBlock
-                    || state.is(BlockTags.LEAVES)) level.setBlock(pos, Blocks.AIR.defaultBlockState(), FLAGS);
+                    || DtIntegration.isLeaves(state)) level.setBlock(pos, Blocks.AIR.defaultBlockState(), FLAGS);
         }
     }
 
