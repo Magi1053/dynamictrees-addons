@@ -172,7 +172,9 @@ fall through to DT network destruction for a persisted managed body.
    and leaves at the cut and every destruction-data position (DT's
    `onDestroyedByPlayer` returns false, so the chopped block is still there).
    Do **not** place the chopped standing block into the SubLevel — it was
-   harvested; drop one primitive log at the cut.
+   harvested; drop one primitive log at the cut. A standing chop whose only
+   wood is the cut is harvested in place (one log, leaves broken, shells
+   cleared) and must not spawn `falling_tree`.
 4. Place DT branch states, not vanilla logs. After each thick core
    (`radius > 8`), call `setRadius` so trunk shells exist and are included
    in the plot.
@@ -298,12 +300,19 @@ leaves roll saplings and sticks.
   broken branch rather than once per log pile.
 - Do not spawn leaf sticks, seeds, saplings, or other foliage when the standing
   tree converts.
-- When a fallen or unsupported leaf actually breaks, run its DT
-  `LeavesProperties` loot table with the body's persisted exact species. That
-  table is the whole drop: saplings or seeds, leaf sticks, and species extras
-  such as Spectrum pigments.
-- Preserve DT's native percentage chance, seasonal seed factor, and Fortune
-  behavior. Collision uses an empty tool; manual breaking uses the player's tool.
+- When a fallen or unsupported leaf breaks or collides, run its DT
+  `LeavesProperties` loot table with the body's persisted exact species.
+  That pays leaf sticks, fruit, and species extras such as Spectrum pigments,
+  and it can still roll the species seed at DT's own chance. Collision uses
+  an empty tool; manual breaking uses the player's tool. Fortune and the
+  seasonal seed factor still apply to that table.
+- Each fallen tree that has leaves also owes a seed quota, paid only as those
+  leaves break or collide. The quota is at least one of the species seed.
+  A second seed is common and a third is frequent, and a large canopy can add
+  a few more. The first leaves that break or collide pay those seeds, so a
+  partial shatter still drops them, and clearing the crown pays whatever is left.
+  Shears do not pay the quota. A split carries a share of the unpaid seeds
+  with the leaves that move.
 - Creative removal produces no branch or leaf loot.
 
 On a fallen body, every wood or leaf block shows the guaranteed logs of that
@@ -411,6 +420,7 @@ Standing
 - [ ] Iron/diamond/netherite axes retain proportional tool-tier scaling
 - [ ] Mega spruce trunk mines at configured primitive-log speed
 - [ ] Chopping the base felling-converts to a SubLevel, no `falling_tree`
+- [ ] Chopping a stump tip whose only wood is the cut drops one log, breaks its leaves, and clears its shells, no `falling_tree`
 - [ ] Chopping a core junction creates one body per disconnected crown branch,
       even when their leaves touch
 - [ ] Crack overlay shows on the top AND the bark sides of a thick core
@@ -433,7 +443,7 @@ Fallen mining
 - [ ] A radius-16 core pays four logs; mining one of its shells pays that same four
 - [ ] Mining a twig off a big body pays no log; the log arrives once enough wood has left
 - [ ] Jade on a fallen body lists logs only, and the count matches on every block of that segment
-- [ ] Breaking or colliding a leaf can drop that species' sapling, seed, or extra (Spectrum pigment)
+- [ ] Breaking or colliding a tree's leaves drops at least one of its seeds, commonly more, plus any leaf-table extra (Spectrum pigment)
 - [ ] Reload keeps the unpaid budget, so a half-mined body finishes with the same total
 - [ ] Leaves drop exact-species DT seeds/saplings only when physically broken
 - [ ] Remaining equal-thickness trunk becomes its own SubLevel

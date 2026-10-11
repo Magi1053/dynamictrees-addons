@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.1
+
+- A fallen tree drops at least one of its species' seeds when its leaves break or collide, and commonly more than one.
+- Fallen branch ends show log rings instead of bark, and side bark follows the main axis.
+
 ## 1.1.0
 
 - Fallen wood pays its grown volume as logs. Sticks and seeds wait until that branch or leaf breaks.

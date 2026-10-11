@@ -13,8 +13,8 @@ import java.util.UUID;
  * Authoritative ownership metadata for one managed Sable tree body.
  *
  * {@code unpaidVolume} is the scaled DT branch volume still owed per branch-block index.
- * It starts as the grown volume of the wood placed in the body and shrinks as logs and
- * sticks are paid out.
+ * It starts as the grown volume of the wood placed in the body and shrinks as logs are paid.
+ * {@code pendingSeeds} is the species seeds still owed, paid as leaves break or collide.
  */
 public record FallenTreeBody(
         UUID id,
@@ -25,9 +25,11 @@ public record FallenTreeBody(
         Set<BlockPos> wood,
         Set<BlockPos> leaves,
         Map<BlockPos, BlockPos> shellOwners,
-        Map<Integer, Integer> unpaidVolume) {
+        Map<Integer, Integer> unpaidVolume,
+        int pendingSeeds) {
     public FallenTreeBody {
         baseRadius = Math.max(0, baseRadius);
+        pendingSeeds = Math.max(0, pendingSeeds);
         wood = Set.copyOf(wood);
         leaves = Set.copyOf(leaves);
         shellOwners = Map.copyOf(shellOwners);
@@ -41,17 +43,23 @@ public record FallenTreeBody(
     public FallenTreeBody withBlocks(Set<BlockPos> wood, Set<BlockPos> leaves, Map<BlockPos, BlockPos> shellOwners,
                                      Map<Integer, Integer> unpaidVolume) {
         return new FallenTreeBody(id, dimension, species, baseRadius, establishedTree, wood, leaves, shellOwners,
-                unpaidVolume);
+                unpaidVolume, pendingSeeds);
     }
 
     public FallenTreeBody withLeaves(Set<BlockPos> leaves) {
         return withBlocks(wood, leaves, shellOwners, unpaidVolume);
     }
 
+    public FallenTreeBody withPendingSeeds(int pendingSeeds) {
+        return new FallenTreeBody(id, dimension, species, baseRadius, establishedTree, wood, leaves, shellOwners,
+                unpaidVolume, pendingSeeds);
+    }
+
     /** A new body that inherits this body's standing-tree metadata. */
     public FallenTreeBody child(UUID childId, Set<BlockPos> wood, Set<BlockPos> leaves,
-                                Map<BlockPos, BlockPos> shellOwners, Map<Integer, Integer> unpaidVolume) {
+                                Map<BlockPos, BlockPos> shellOwners, Map<Integer, Integer> unpaidVolume,
+                                int pendingSeeds) {
         return new FallenTreeBody(childId, dimension, species, baseRadius, establishedTree, wood, leaves,
-                shellOwners, unpaidVolume);
+                shellOwners, unpaidVolume, pendingSeeds);
     }
 }

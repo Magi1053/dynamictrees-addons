@@ -18,10 +18,14 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 /** Notes whether the branch being meshed belongs to a fallen Sable body. */
 @Mixin(value = BasicBranchBlockBakedModel.class, remap = false)
 public abstract class BranchModelDataMixin {
-    @Inject(method = "getModelData", at = @At("RETURN"))
+    @Inject(method = "getModelData", at = @At("RETURN"), cancellable = true)
     private void dtsable$markFallenPlot(BlockAndTintGetter level, BlockPos pos, BlockState state, ModelData extra,
                                         CallbackInfoReturnable<ModelData> cir) {
-        FallenEndGrain.FALLEN.set(dtsable$inFallenPlot(level, pos));
+        boolean fallen = dtsable$inFallenPlot(level, pos);
+        FallenEndGrain.FALLEN.set(fallen);
+        if (fallen) {
+            cir.setReturnValue(cir.getReturnValue().derive().with(FallenEndGrain.PROPERTY, Boolean.TRUE).build());
+        }
     }
 
     private static boolean dtsable$inFallenPlot(BlockAndTintGetter getter, BlockPos pos) {

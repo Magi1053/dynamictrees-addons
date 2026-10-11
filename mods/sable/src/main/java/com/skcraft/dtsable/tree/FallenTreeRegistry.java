@@ -38,6 +38,7 @@ public final class FallenTreeRegistry {
     private static final String ESTABLISHED_TAG = "dtsable_established_tree";
     /** Flattened [branchIndex, volume, branchIndex, volume, ...] pairs. */
     private static final String UNPAID_TAG = "dtsable_unpaid_volume";
+    private static final String SEEDS_TAG = "dtsable_pending_seeds";
     private static final Map<UUID, FallenTreeBody> BODIES = new ConcurrentHashMap<>();
     private static final Map<UUID, PendingTopple> PENDING_TOPPLES = new ConcurrentHashMap<>();
     private static final Map<UUID, Integer> SETTLING_BODIES = new ConcurrentHashMap<>();
@@ -75,6 +76,7 @@ public final class FallenTreeRegistry {
             unpaid[i++] = entry.getValue();
         }
         tag.putIntArray(UNPAID_TAG, unpaid);
+        tag.putInt(SEEDS_TAG, body.pendingSeeds());
     }
 
     private static Map<Integer, Integer> readUnpaid(CompoundTag tag) {
@@ -148,8 +150,10 @@ public final class FallenTreeRegistry {
         // Bodies saved before the budget existed owe exactly the wood still standing in the plot.
         Map<Integer, Integer> unpaid = tag.contains(UNPAID_TAG) ? readUnpaid(tag)
                 : WoodBudget.measure(level, wood, baseRadius, DtIntegration.lootVolumeScale(species));
+        int pendingSeeds = tag.contains(SEEDS_TAG) ? tag.getInt(SEEDS_TAG)
+                : SeedYield.roll(leaves.size(), () -> level.getRandom().nextFloat());
         FallenTreeBody recovered = new FallenTreeBody(subLevel.getUniqueId(), level.dimension(), species,
-                baseRadius, established, wood, leaves, shells, unpaid);
+                baseRadius, established, wood, leaves, shells, unpaid, pendingSeeds);
         FallenTreeBody existing = BODIES.putIfAbsent(recovered.id(), recovered);
         persist(tag, existing == null ? recovered : existing);
         installObserver(level);
@@ -224,11 +228,15 @@ public final class FallenTreeRegistry {
                 if (split == null) return;
                 if (queue.isEmpty()) PENDING_SPLITS.remove(level);
                 BlockPos destination = server.getPlot().getCenterBlock();
-                FallenTreeBody child = split.source().child(server.getUniqueId(),
+                FallenTreeBody live = BODIES.get(split.source().id());
+                FallenTreeBody basis = live != null ? live : split.source();
+                int childSeeds = SeedYield.take(basis.pendingSeeds(), basis.leaves().size(), split.leaves().size(),
+                        () -> level.getRandom().nextFloat());
+                FallenTreeBody child = basis.child(server.getUniqueId(),
                         translate(split.wood(), split.anchor(), destination),
                         translate(split.leaves(), split.anchor(), destination),
                         translateOwners(split.shells(), split.anchor(), destination),
-                        split.unpaidVolume());
+                        split.unpaidVolume(), childSeeds);
                 register(level, child);
                 FallenTreeBody source = BODIES.get(split.source().id());
                 if (source != null) {
@@ -241,7 +249,8 @@ public final class FallenTreeRegistry {
                         int left = unpaid.getOrDefault(index, 0) - moved;
                         if (left > 0) unpaid.put(index, left); else unpaid.remove(index);
                     });
-                    register(level, source.withBlocks(wood, leaves, shells, unpaid));
+                    register(level, source.withBlocks(wood, leaves, shells, unpaid)
+                            .withPendingSeeds(source.pendingSeeds() - childSeeds));
                 }
             }
         });

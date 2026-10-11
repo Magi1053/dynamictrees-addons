@@ -35,6 +35,10 @@ import java.util.UUID;
 /** Transactional conversion from DT destruction data to one managed Sable body. */
 public final class TreeAssembler {
     private static final int FLAGS = Block.UPDATE_CLIENTS;
+    /** Neighbor updates, so the stump below a harvested tip disconnects. Network destroy stays suppressed. */
+    private static final int HARVEST_FLAGS = Block.UPDATE_ALL;
+    /** Not a body. The cut was harvested in place, so dropTree must not spawn a falling tree. */
+    private static final UUID HARVESTED_CUT = new UUID(0L, 1L);
     private TreeAssembler() {}
 
     public static UUID tryAssemble(ServerLevel level, Player player, BranchDestructionData data) {
@@ -44,6 +48,11 @@ public final class TreeAssembler {
         // A DT FutureBreak can be emitted by blocks inside a Sable plot. Those coordinates
         // are plot-local storage, not standing-world coordinates, and must never recurse.
         if (Sable.HELPER.getContaining(level, plan.cutPos()) != null) return null;
+        // The chopped block is excluded from the body. A tip with nothing above it is still a fell:
+        // harvest that log in place instead of letting DT spawn a falling tree.
+        if (plan.branches().isEmpty()) {
+            return DtIntegration.mutateWithoutNetworkDestroy(() -> harvestCut(level, player, plan));
+        }
         if (!plan.validate(DtSableConfig.maxBlocks())) return null;
         Map<BlockPos, BlockState> source = captureSource(level, plan);
         try {
@@ -54,6 +63,25 @@ public final class TreeAssembler {
             DtIntegration.mutateWithoutNetworkDestroy(() -> restoreSource(level, source));
             return null;
         }
+    }
+
+    /** One log, the cut's leaves, and its trunk shells. No body and no topple. */
+    private static UUID harvestCut(ServerLevel level, Player player, FelledTreePlan plan) {
+        BlockPos cut = plan.cutPos();
+        BlockState cutState = level.getBlockState(cut);
+        if (player == null || !player.isCreative()) spawnDrops(level, cut, plan.cutDrops());
+        for (FelledTreePlan.Node leaf : plan.leaves()) TreeHarvest.breakStandingLeaf(level, leaf.pos());
+        if (DtIntegration.radius(cutState) > WoodThickness.PRIMARY) {
+            for (int dx = -1; dx <= 1; dx++) for (int dz = -1; dz <= 1; dz++) {
+                if (dx == 0 && dz == 0) continue;
+                BlockPos shell = cut.offset(dx, 0, dz);
+                if (level.getBlockState(shell).getBlock() instanceof TrunkShellBlock) {
+                    level.setBlock(shell, Blocks.AIR.defaultBlockState(), HARVEST_FLAGS);
+                }
+            }
+        }
+        level.setBlock(cut, Blocks.AIR.defaultBlockState(), HARVEST_FLAGS);
+        return HARVESTED_CUT;
     }
 
     private static UUID convert(ServerLevel level, Player player, FelledTreePlan plan,
@@ -141,10 +169,11 @@ public final class TreeAssembler {
         if (subLevel == null || subLevel.isRemoved()) throw new IllegalStateException("Sable assembly failed");
         created.add(subLevel);
         BlockPos plotAnchor = subLevel.getPlot().getCenterBlock();
+        int pendingSeeds = SeedYield.roll(worldLeaves.size(), () -> level.getRandom().nextFloat());
         return new FallenTreeBody(subLevel.getUniqueId(), level.dimension(), plan.species(),
                 plan.baseRadius(), plan.establishedTree(),
                 translate(worldWood, anchor, plotAnchor), translate(worldLeaves, anchor, plotAnchor),
-                translateOwners(worldShellOwners, anchor, plotAnchor), unpaidVolume);
+                translateOwners(worldShellOwners, anchor, plotAnchor), unpaidVolume, pendingSeeds);
     }
 
     private static Iterable<BlockPos> neighbors(BlockPos pos) {

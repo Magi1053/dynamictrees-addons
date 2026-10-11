@@ -2,7 +2,6 @@ package com.skcraft.dtsable.mixin;
 
 import com.dtteam.dynamictrees.model.baked.ThickBranchBlockBakedModel;
 import com.skcraft.dtsable.client.FallenEndGrain;
-import com.skcraft.dtsable.dt.DtSableConfig;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.resources.model.BakedModel;
@@ -47,7 +46,7 @@ public abstract class ThickBranchEndGrainMixin {
     )
     private List<BakedQuad> dtsable$logEndOnFallenCaps(BakedModel model, BlockState state, Direction face,
                                                       RandomSource random, ModelData data, RenderType type) {
-        if (DtSableConfig.isEnabled() && Boolean.TRUE.equals(FallenEndGrain.FALLEN.get()) && face != null) {
+        if (FallenEndGrain.isFallen(data) && face != null) {
             int bark = indexOf(this.trunksTopBark, model);
             if (bark >= 0) {
                 BakedModel rings = face == Direction.DOWN ? this.trunksBotRings[bark] : this.trunksTopRings[bark];

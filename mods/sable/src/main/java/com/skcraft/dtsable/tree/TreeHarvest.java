@@ -18,6 +18,8 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.neoforged.neoforge.common.ItemAbilities;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.Enchantments;
@@ -82,13 +84,14 @@ public final class TreeHarvest {
         FallenTreeBody body = preview.body();
         BlockPos pos = preview.pos();
         return DtIntegration.mutateWithoutNetworkDestroy(() -> {
-            splitSecondaryComponents(level, body, preview.components(), preview.removedLeaves(), preview.splitBudgets());
+            int pending = body.pendingSeeds() - dropLeaves(level, preview.removedLeaves(), body, player);
+            pending = splitSecondaryComponents(level, body, preview.components(), preview.removedLeaves(),
+                    preview.splitBudgets(), pending);
             dropHarvest(level, body, pos, preview.paidVolume(), player);
             dropBranchChances(level, body, preview.removedWood(), player);
-            dropLeaves(level, preview.removedLeaves(), body.species(), player);
             playBreakSound(level, pos, preview.selected());
             removeOwned(level, body, preview.removedWood(), preview.removedLeaves());
-            updateSourceBody(level, body, preview.components(), preview.removedLeaves(), preview.unpaidVolume());
+            updateSourceBody(level, body, preview.components(), preview.removedLeaves(), preview.unpaidVolume(), pending);
             return true;
         });
     }
@@ -207,14 +210,15 @@ public final class TreeHarvest {
         BlockState state = level.getBlockState(pos);
         if (!WoodThickness.isAutoBreakable(state)) return false;
         if (DtIntegration.isLeaves(state)) {
-            DtIntegration.mutateWithoutNetworkDestroy(() -> {
-                dropLeaves(level, Set.of(pos), body.species(), player);
+            int dropped = DtIntegration.mutateWithoutNetworkDestroy(() -> {
+                int paid = dropLeaves(level, Set.of(pos), body, player);
                 playBreakSound(level, pos, state);
                 level.setBlock(pos, Blocks.AIR.defaultBlockState(), FLAGS);
+                return paid;
             });
             Set<BlockPos> leaves = new HashSet<>(body.leaves());
             leaves.remove(pos);
-            FallenTreeRegistry.register(level, body.withLeaves(leaves));
+            FallenTreeRegistry.register(level, body.withLeaves(leaves).withPendingSeeds(body.pendingSeeds() - dropped));
             return true;
         }
         return breakAt(level, pos, null, true);
@@ -236,12 +240,14 @@ public final class TreeHarvest {
                 (sound.getVolume() + 1.0F) / 2.0F, sound.getPitch() * 0.8F);
     }
 
-    private static void splitSecondaryComponents(ServerLevel level, FallenTreeBody source,
-                                                 List<Set<BlockPos>> components, Set<BlockPos> removedLeaves,
-                                                 List<Map<Integer, Integer>> splitBudgets) {
-        if (components.size() <= 1) return;
+    private static int splitSecondaryComponents(ServerLevel level, FallenTreeBody source,
+                                                List<Set<BlockPos>> components, Set<BlockPos> removedLeaves,
+                                                List<Map<Integer, Integer>> splitBudgets, int pendingSeeds) {
+        if (components.size() <= 1) return pendingSeeds;
         Set<BlockPos> availableLeaves = new HashSet<>(source.leaves());
         availableLeaves.removeAll(removedLeaves);
+        int poolLeaves = availableLeaves.size();
+        int poolSeeds = pendingSeeds;
         for (int i = 1; i < components.size(); i++) {
             Set<BlockPos> wood = components.get(i);
             Map<Integer, Integer> budget = splitBudgets.get(i - 1);
@@ -256,14 +262,18 @@ public final class TreeHarvest {
             BlockPos anchor = wood.iterator().next();
             BoundingBox3i bounds = BoundingBox3i.from(moving);
             if (bounds == null) continue;
+            int movedSeeds = SeedYield.take(poolSeeds, poolLeaves, leaves.size(), () -> level.getRandom().nextFloat());
+            poolSeeds -= movedSeeds;
+            poolLeaves = Math.max(0, poolLeaves - leaves.size());
             ServerSubLevel split = SubLevelAssemblyHelper.assembleBlocks(level, anchor, moving, bounds.expand(1, 1, 1));
             if (split == null || split.isRemoved()) throw new IllegalStateException("Sable split failed");
             BlockPos destination = split.getPlot().getCenterBlock();
             FallenTreeBody splitBody = source.child(split.getUniqueId(),
                     translate(wood, anchor, destination), translate(leaves, anchor, destination),
-                    translateOwners(shells, anchor, destination), budget);
+                    translateOwners(shells, anchor, destination), budget, movedSeeds);
             FallenTreeRegistry.register(level, splitBody);
         }
+        return poolSeeds;
     }
 
     private static void removeOwned(ServerLevel level, FallenTreeBody body, Set<BlockPos> wood, Set<BlockPos> leaves) {
@@ -274,7 +284,8 @@ public final class TreeHarvest {
     }
 
     private static void updateSourceBody(ServerLevel level, FallenTreeBody old, List<Set<BlockPos>> components,
-                                         Set<BlockPos> removedLeaves, Map<Integer, Integer> unpaidVolume) {
+                                         Set<BlockPos> removedLeaves, Map<Integer, Integer> unpaidVolume,
+                                         int pendingSeeds) {
         if (components.isEmpty()) {
             ServerSubLevel source = FallenTreeRegistry.subLevel(level, old.id());
             if (source != null) {
@@ -287,7 +298,8 @@ public final class TreeHarvest {
         Set<BlockPos> leaves = attachedLeaves(level, difference(old.leaves(), removedLeaves), largest);
         Map<BlockPos, BlockPos> shells = new HashMap<>();
         old.shellOwners().forEach((shell, core) -> { if (largest.contains(core)) shells.put(shell, core); });
-        FallenTreeRegistry.register(level, old.withBlocks(largest, leaves, shells, unpaidVolume));
+        FallenTreeRegistry.register(level, old.withBlocks(largest, leaves, shells, unpaidVolume)
+                .withPendingSeeds(pendingSeeds));
     }
 
     private static Set<BlockPos> unsupportedThinWood(ServerLevel level, Set<BlockPos> remainingWood) {
@@ -393,14 +405,32 @@ public final class TreeHarvest {
         return EnchantmentHelper.getTagEnchantmentLevel(fortune, tool);
     }
 
-    private static void dropLeaves(ServerLevel level, Set<BlockPos> leaves, Species species, Player player) {
-        if (player != null && player.isCreative()) return;
+    /** @return how many owed seeds this break paid */
+    private static int dropLeaves(ServerLevel level, Set<BlockPos> leaves, FallenTreeBody body, Player player) {
+        if (player != null && player.isCreative()) return 0;
+        Species species = body.species();
         ItemStack tool = player == null ? ItemStack.EMPTY : player.getMainHandItem();
+        List<BlockPos> breaking = new ArrayList<>();
         for (BlockPos pos : leaves) {
+            if (!DtIntegration.isLeaves(level.getBlockState(pos))) continue;
+            breaking.add(pos);
             for (ItemStack drop : leafDrops(level, Set.of(pos), species, player, tool)) {
                 Block.popResource(level, pos, drop);
             }
         }
+        if (breaking.isEmpty() || shears(tool)) return 0;
+        int owed = SeedYield.take(body.pendingSeeds(), body.leaves().size(), breaking.size(),
+                () -> level.getRandom().nextFloat());
+        ItemStack seed = species.getSeedStack(1);
+        if (seed.isEmpty() || owed <= 0) return 0;
+        for (int i = 0; i < owed; i++) {
+            Block.popResource(level, breaking.get(level.getRandom().nextInt(breaking.size())), seed.copy());
+        }
+        return owed;
+    }
+
+    private static boolean shears(ItemStack tool) {
+        return !tool.isEmpty() && (tool.is(Items.SHEARS) || tool.canPerformAction(ItemAbilities.SHEARS_HARVEST));
     }
 
     private static List<ItemStack> leafDrops(ServerLevel level, Set<BlockPos> leaves, Species species, Player player,
