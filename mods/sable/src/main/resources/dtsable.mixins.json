@@ -6,6 +6,9 @@
     "mixins": [
         "BetterEndDebugMixin",
         "BreakingPosAccessor",
+        "BreakerDropInvoker",
+        "ContraptionSawMixin",
+        "ContraptionSawSpeedMixin",
         "KineticSpeedAccessor",
         "FellingMixin",
         "FallingTreeDropMixin",

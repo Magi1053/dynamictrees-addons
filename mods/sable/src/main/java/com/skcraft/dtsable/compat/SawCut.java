@@ -6,10 +6,14 @@ import com.dtteam.dynamictrees.block.branch.TrunkShellBlock;
 import com.dtteam.dynamictrees.tree.TreeHelper;
 import com.mojang.authlib.GameProfile;
 import com.skcraft.dtsable.dt.DtIntegration;
+import com.skcraft.dtsable.dt.DtSableConfig;
+import com.skcraft.dtsable.dt.FellContext;
 import com.skcraft.dtsable.tree.FallenTreeRegistry;
 import com.skcraft.dtsable.tree.TreeHarvest;
 import com.skcraft.dtsable.tree.WoodBudget;
 import com.skcraft.dtsable.tree.WoodYield;
+import com.skcraft.dtsable.tree.WoodChop;
+import com.skcraft.dtsable.tree.WoodThickness;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
@@ -18,6 +22,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.LevelEvent;
 import net.minecraft.world.level.block.state.BlockState;
@@ -28,11 +33,10 @@ import net.minecraft.world.phys.shapes.CollisionContext;
 import net.neoforged.neoforge.common.util.FakePlayerFactory;
 
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.BiConsumer;
 
 /**
  * What a Create breaker is cutting: a standing Dynamic Tree, or one fallen-body block.
@@ -41,17 +45,43 @@ import java.util.UUID;
  */
 public final class SawCut {
     /** Plot position of a fallen block occupying the saw's breaking space, if any. */
-    public static final ThreadLocal<BlockPos> FALLEN = new ThreadLocal<>();
+    private static final ThreadLocal<BlockPos> FALLEN = new ThreadLocal<>();
     private static final GameProfile SAW = new GameProfile(
             UUID.nameUUIDFromBytes("dtsable-mechanical-saw".getBytes(StandardCharsets.UTF_8)),
             "DT Sable Saw");
 
     private SawCut() {}
 
+    public static BlockPos projectedFallenPosition() {
+        return FALLEN.get();
+    }
+
+    public static void clearProjectedFallenPosition() {
+        FALLEN.remove();
+    }
+
     public static boolean isCuttable(BlockState state) {
         return state.getBlock() instanceof BranchBlock
                 || state.getBlock() instanceof TrunkShellBlock
                 || DtIntegration.isLeaves(state);
+    }
+
+    /** Both stationary breakers and moving saws time a cut against the species' vanilla log. */
+    public static float breakingHardness(BlockState state, BlockGetter level, BlockPos pos,
+                                         boolean projectedFallen) {
+        WoodTarget target = woodTarget(level, pos, state);
+        if (target == null) {
+            float hardness = state.getDestroySpeed(level, pos);
+            return hardness < 0.0F ? 2.0F : hardness;
+        }
+        int radius = Math.max(1, WoodThickness.radius(target.state()));
+        boolean standing = !projectedFallen
+                && (!(level instanceof Level world) || FallenTreeRegistry.find(world, pos).isEmpty());
+        float configured = standing ? DtSableConfig.standingWoodMiningSpeed()
+                : DtSableConfig.fallenWoodMiningSpeed();
+        float relative = WoodChop.relativeToPrimitiveLog(configured, radius, standing);
+        float logHardness = DtIntegration.primitiveLog(target.branch()).defaultBlockState().getDestroySpeed(level, pos);
+        return WoodChop.breakerHardness(logHardness, relative);
     }
 
     /**
@@ -78,51 +108,60 @@ public final class SawCut {
         return level.getBlockState(plot);
     }
 
-    /** Saw: pop the cut and the crown it supports, and drop their items. Fallen wood is one chop. */
-    public static boolean cut(ServerLevel level, BlockPos pos, BlockState state, BlockPos machinePos) {
-        return breakTree(level, pos, state, machinePos, false);
+    /** Saw: mill the supported crown through the caller's native drop callback. Fallen wood is one chop. */
+    public static boolean cut(ServerLevel level, BlockPos pos, BlockState state, BlockPos machinePos,
+                              BiConsumer<BlockPos, ItemStack> drops) {
+        return breakTree(level, pos, state, machinePos, false, drops);
     }
 
     /** Drill: fell the cut and the crown it supports. Fallen wood is one chop. */
-    public static boolean fell(ServerLevel level, BlockPos pos, BlockState state, BlockPos machinePos) {
-        return breakTree(level, pos, state, machinePos, true);
+    public static boolean fell(ServerLevel level, BlockPos pos, BlockState state, BlockPos machinePos,
+                               BiConsumer<BlockPos, ItemStack> drops) {
+        return breakTree(level, pos, state, machinePos, true, drops);
     }
 
     private static boolean breakTree(ServerLevel level, BlockPos pos, BlockState state, BlockPos machinePos,
-                                     boolean fellBody) {
+                                     boolean fellBody, BiConsumer<BlockPos, ItemStack> drops) {
         BlockPos fallen = FALLEN.get();
         if (fallen != null) {
             FALLEN.remove();
-            return TreeHarvest.breakManually(level, fallen, null);
+            return TreeHarvest.breakManually(level, fallen, null, drops);
         }
         if (FallenTreeRegistry.find(level, pos).isPresent()) {
-            return TreeHarvest.breakManually(level, pos, null);
+            return TreeHarvest.breakManually(level, pos, null, drops);
         }
-        StandingTarget target = standingTarget(level, pos, state);
+        WoodTarget target = woodTarget(level, pos, state);
         if (target == null) {
-            if (DtIntegration.isLeaves(state)) return TreeHarvest.breakStandingLeaf(level, pos);
+            if (DtIntegration.isLeaves(state)) return TreeHarvest.breakStandingLeaf(level, pos, drops);
             return false;
         }
         if (fellBody) {
-            target.branch.futureBreak(target.state, level, target.pos, cutter(level, machinePos, target.pos));
+            FellContext.withHarvestDrops(drops, () -> target.branch.futureBreak(
+                    target.state, level, target.pos, cutter(level, machinePos, target.pos)));
             return true;
         }
-        return mill(level, target, machinePos);
+        return mill(level, target, machinePos, drops);
     }
 
     /**
      * Removes the cut node and every branch DT would not walk back to the root, then pays that
      * wood and its leaves as items. Does not call {@code dropTree}, so the crown does not fall.
      */
-    private static boolean mill(ServerLevel level, StandingTarget target, BlockPos machinePos) {
+    private static boolean mill(ServerLevel level, WoodTarget target, BlockPos machinePos,
+                                BiConsumer<BlockPos, ItemStack> drops) {
         BranchDestructionData data = target.branch.destroyBranchFromNode(
                 level, target.pos, Direction.DOWN, false, cutter(level, machinePos, target.pos));
         if (data == null || data.species == null || data.getNumBranches() <= 0) return false;
-        dropMilledWood(level, data);
+        dropMilledWood(level, data, drops);
         for (BranchBlock.ItemStackPos drop : data.leavesDrops) {
             if (drop.stack.isEmpty()) continue;
-            Block.popResource(level, data.cutPos.offset(drop.pos), drop.stack);
+            drops.accept(data.cutPos.offset(drop.pos), drop.stack);
         }
+        showDestructionParticles(level, data);
+        return true;
+    }
+
+    private static void showDestructionParticles(ServerLevel level, BranchDestructionData data) {
         for (int i = 0; i < data.getNumBranches(); i++) {
             BlockState broken = DtIntegration.branchState(data, i);
             if (broken == null || broken.isAir()) continue;
@@ -133,11 +172,11 @@ public final class SawCut {
             if (broken == null || broken.isAir()) continue;
             level.levelEvent(LevelEvent.PARTICLES_DESTROY_BLOCK, DtIntegration.leafPos(data, i), Block.getId(broken));
         }
-        return true;
     }
 
     /** Whole-log payment for every destroyed branch, including the cut, dropped at the cut. */
-    private static List<ItemStack> dropMilledWood(ServerLevel level, BranchDestructionData data) {
+    private static void dropMilledWood(ServerLevel level, BranchDestructionData data,
+                                       BiConsumer<BlockPos, ItemStack> drops) {
         int baseRadius = 0;
         BlockState baseState = data.basePos == null ? null : level.getBlockState(data.basePos);
         if (baseState != null && !baseState.isAir()) {
@@ -157,29 +196,26 @@ public final class SawCut {
             if (state == null) continue;
             WoodBudget.add(budget, state, DtIntegration.branchRadius(data, i), baseRadius, scale);
         }
-        List<ItemStack> dropped = new ArrayList<>();
         for (Map.Entry<Integer, Integer> entry : budget.entrySet()) {
             int paid = WoodYield.pay(entry.getValue(), 0).paidVolume();
             if (paid <= 0) continue;
             for (ItemStack stack : DtIntegration.branchDrops(level, data.species, entry.getKey(), paid, ItemStack.EMPTY)) {
                 if (stack.isEmpty()) continue;
-                dropped.add(stack.copy());
-                Block.popResource(level, data.cutPos, stack);
+                drops.accept(data.cutPos, stack);
             }
         }
-        return dropped;
     }
 
-    private record StandingTarget(BranchBlock branch, BlockState state, BlockPos pos) {}
+    private record WoodTarget(BranchBlock branch, BlockState state, BlockPos pos) {}
 
-    private static StandingTarget standingTarget(ServerLevel level, BlockPos pos, BlockState state) {
-        if (state.getBlock() instanceof BranchBlock branch) return new StandingTarget(branch, state, pos);
+    private static WoodTarget woodTarget(BlockGetter level, BlockPos pos, BlockState state) {
+        if (state.getBlock() instanceof BranchBlock branch) return new WoodTarget(branch, state, pos);
         if (!(state.getBlock() instanceof TrunkShellBlock shell)) return null;
         TrunkShellBlock.ShellMuse muse = shell.getMuse(level, state, pos);
         if (muse == null) return null;
         BranchBlock branch = TreeHelper.getBranch(muse.state());
         if (branch == null) return null;
-        return new StandingTarget(branch, muse.state(), muse.pos());
+        return new WoodTarget(branch, muse.state(), muse.pos());
     }
 
     /** Stands at the saw and looks at the cut so DT's hit direction and the fall direction match the saw. */

@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.2
+
+- Moving Create saws mill Dynamic Trees into contraption storage, with excess drops ejected beside the saw.
+- Contraption saw cutting time uses primitive-log hardness and scales with trunk radius, matching stationary saws.
+- Saws mounted on Sable sublevels use Create's native drop callback for ejection and Simulated's connected-storage collection.
+- Mechanical drills use Create's native drop callback for standing-tree cut drops and fallen-wood harvests, including Simulated's connected storage.
+
 ## 1.1.1
 
 - A fallen tree drops at least one of its species' seeds when its leaves break or collide, and commonly more than one.

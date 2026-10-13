@@ -36,6 +36,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BiConsumer;
 
 /** The sole removal path for DT blocks owned by a managed fallen body. */
 public final class TreeHarvest {
@@ -43,12 +44,17 @@ public final class TreeHarvest {
     private TreeHarvest() {}
 
     public static boolean breakManually(ServerLevel level, BlockPos pos, Player player) {
+        return breakManually(level, pos, player, (at, stack) -> Block.popResource(level, at, stack));
+    }
+
+    public static boolean breakManually(ServerLevel level, BlockPos pos, Player player,
+                                        BiConsumer<BlockPos, ItemStack> drops) {
         FallenTreeBody body = FallenTreeRegistry.find(level, pos).orElse(null);
         if (body == null) return false;
         if (body.leaves().contains(pos) && DtIntegration.isLeaves(level.getBlockState(pos))) {
-            return snapFrom(level, pos, player);
+            return snapFrom(level, pos, player, drops);
         }
-        return breakAt(level, pos, player, false);
+        return breakAt(level, pos, player, false, drops);
     }
 
     /**
@@ -79,16 +85,21 @@ public final class TreeHarvest {
     }
 
     public static boolean breakAt(ServerLevel level, BlockPos requested, Player player, boolean collision) {
+        return breakAt(level, requested, player, collision, (at, stack) -> Block.popResource(level, at, stack));
+    }
+
+    private static boolean breakAt(ServerLevel level, BlockPos requested, Player player, boolean collision,
+                                   BiConsumer<BlockPos, ItemStack> drops) {
         Preview preview = preview(level, requested, collision);
         if (preview == null) return false;
         FallenTreeBody body = preview.body();
         BlockPos pos = preview.pos();
         return DtIntegration.mutateWithoutNetworkDestroy(() -> {
-            int pending = body.pendingSeeds() - dropLeaves(level, preview.removedLeaves(), body, player);
+            int pending = body.pendingSeeds() - dropLeaves(level, preview.removedLeaves(), body, player, drops);
             pending = splitSecondaryComponents(level, body, preview.components(), preview.removedLeaves(),
                     preview.splitBudgets(), pending);
-            dropHarvest(level, body, pos, preview.paidVolume(), player);
-            dropBranchChances(level, body, preview.removedWood(), player);
+            dropHarvest(level, body, pos, preview.paidVolume(), player, drops);
+            dropBranchChances(level, body, preview.removedWood(), player, drops);
             playBreakSound(level, pos, preview.selected());
             removeOwned(level, body, preview.removedWood(), preview.removedLeaves());
             updateSourceBody(level, body, preview.components(), preview.removedLeaves(), preview.unpaidVolume(), pending);
@@ -201,17 +212,18 @@ public final class TreeHarvest {
     }
 
     public static boolean snapFrom(ServerLevel level, BlockPos pos) {
-        return snapFrom(level, pos, null);
+        return snapFrom(level, pos, null, (at, stack) -> Block.popResource(level, at, stack));
     }
 
-    private static boolean snapFrom(ServerLevel level, BlockPos pos, Player player) {
+    private static boolean snapFrom(ServerLevel level, BlockPos pos, Player player,
+                                    BiConsumer<BlockPos, ItemStack> drops) {
         FallenTreeBody body = FallenTreeRegistry.find(level, pos).orElse(null);
         if (body == null) return false;
         BlockState state = level.getBlockState(pos);
         if (!WoodThickness.isAutoBreakable(state)) return false;
         if (DtIntegration.isLeaves(state)) {
             int dropped = DtIntegration.mutateWithoutNetworkDestroy(() -> {
-                int paid = dropLeaves(level, Set.of(pos), body, player);
+                int paid = dropLeaves(level, Set.of(pos), body, player, drops);
                 playBreakSound(level, pos, state);
                 level.setBlock(pos, Blocks.AIR.defaultBlockState(), FLAGS);
                 return paid;
@@ -221,14 +233,18 @@ public final class TreeHarvest {
             FallenTreeRegistry.register(level, body.withLeaves(leaves).withPendingSeeds(body.pendingSeeds() - dropped));
             return true;
         }
-        return breakAt(level, pos, null, true);
+        return breakAt(level, pos, null, true, drops);
     }
 
     public static boolean breakStandingLeaf(ServerLevel level, BlockPos pos) {
+        return breakStandingLeaf(level, pos, (at, stack) -> Block.popResource(level, at, stack));
+    }
+
+    public static boolean breakStandingLeaf(ServerLevel level, BlockPos pos, BiConsumer<BlockPos, ItemStack> drops) {
         BlockState state = level.getBlockState(pos);
         if (!DtIntegration.isLeaves(state) || FallenTreeRegistry.find(level, pos).isPresent()) return false;
         for (ItemStack drop : Block.getDrops(state, level, pos, null, null, ItemStack.EMPTY)) {
-            Block.popResource(level, pos, drop);
+            drops.accept(pos, drop);
         }
         playBreakSound(level, pos, state);
         return level.setBlock(pos, Blocks.AIR.defaultBlockState(), FLAGS);
@@ -351,9 +367,9 @@ public final class TreeHarvest {
 
     /** Runs the species branch loot table on the whole-log volume owed by this break. */
     private static void dropHarvest(ServerLevel level, FallenTreeBody body, BlockPos at,
-                                    Map<Integer, Integer> paidVolume, Player player) {
+                                    Map<Integer, Integer> paidVolume, Player player, BiConsumer<BlockPos, ItemStack> drops) {
         if (player != null && player.isCreative()) return;
-        for (ItemStack drop : woodDrops(level, body, paidVolume, ItemStack.EMPTY)) Block.popResource(level, at, drop);
+        for (ItemStack drop : woodDrops(level, body, paidVolume, ItemStack.EMPTY)) drops.accept(at, drop);
     }
 
     private static List<ItemStack> woodDrops(ServerLevel level, FallenTreeBody body, Map<Integer, Integer> paidVolume,
@@ -370,7 +386,8 @@ public final class TreeHarvest {
      * on that species' branch loot table (golden amber, and similar). The stick item is whatever
      * the species table names, so skyroot sticks stay skyroot sticks.
      */
-    private static void dropBranchChances(ServerLevel level, FallenTreeBody body, Set<BlockPos> wood, Player player) {
+    private static void dropBranchChances(ServerLevel level, FallenTreeBody body, Set<BlockPos> wood,
+                                          Player player, BiConsumer<BlockPos, ItemStack> drops) {
         if (player != null && player.isCreative()) return;
         ItemStack tool = player == null ? ItemStack.EMPTY : player.getMainHandItem();
         int fortune = fortuneLevel(level, tool);
@@ -382,11 +399,11 @@ public final class TreeHarvest {
             if (WoodYield.branchDropsStick(level.getRandom().nextFloat(), fortune, rate)) {
                 Item stick = stickItem(level, body, index);
                 if (stick != null) {
-                    Block.popResource(level, pos, new ItemStack(stick, 1 + level.getRandom().nextInt(2)));
+                    drops.accept(pos, new ItemStack(stick, 1 + level.getRandom().nextInt(2)));
                 }
             }
             for (ItemStack extra : DtIntegration.branchDrops(level, body.species(), index, 0, tool)) {
-                if (!extra.isEmpty()) Block.popResource(level, pos, extra);
+                if (!extra.isEmpty()) drops.accept(pos, extra);
             }
         }
     }
@@ -406,7 +423,8 @@ public final class TreeHarvest {
     }
 
     /** @return how many owed seeds this break paid */
-    private static int dropLeaves(ServerLevel level, Set<BlockPos> leaves, FallenTreeBody body, Player player) {
+    private static int dropLeaves(ServerLevel level, Set<BlockPos> leaves, FallenTreeBody body,
+                                  Player player, BiConsumer<BlockPos, ItemStack> drops) {
         if (player != null && player.isCreative()) return 0;
         Species species = body.species();
         ItemStack tool = player == null ? ItemStack.EMPTY : player.getMainHandItem();
@@ -415,7 +433,7 @@ public final class TreeHarvest {
             if (!DtIntegration.isLeaves(level.getBlockState(pos))) continue;
             breaking.add(pos);
             for (ItemStack drop : leafDrops(level, Set.of(pos), species, player, tool)) {
-                Block.popResource(level, pos, drop);
+                drops.accept(pos, drop);
             }
         }
         if (breaking.isEmpty() || shears(tool)) return 0;
@@ -424,7 +442,7 @@ public final class TreeHarvest {
         ItemStack seed = species.getSeedStack(1);
         if (seed.isEmpty() || owed <= 0) return 0;
         for (int i = 0; i < owed; i++) {
-            Block.popResource(level, breaking.get(level.getRandom().nextInt(breaking.size())), seed.copy());
+            drops.accept(breaking.get(level.getRandom().nextInt(breaking.size())), seed.copy());
         }
         return owed;
     }

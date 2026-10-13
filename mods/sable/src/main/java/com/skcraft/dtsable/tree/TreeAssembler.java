@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.BiConsumer;
 
 /** Transactional conversion from DT destruction data to one managed Sable body. */
 public final class TreeAssembler {
@@ -42,6 +43,11 @@ public final class TreeAssembler {
     private TreeAssembler() {}
 
     public static UUID tryAssemble(ServerLevel level, Player player, BranchDestructionData data) {
+        return tryAssemble(level, player, data, null);
+    }
+
+    public static UUID tryAssemble(ServerLevel level, Player player, BranchDestructionData data,
+                                    BiConsumer<BlockPos, ItemStack> drops) {
         if (!DtSableConfig.isEnabled() || DtIntegration.isMutatingBody()
                 || SubLevelContainer.getContainer(level) == null) return null;
         FelledTreePlan plan = FelledTreePlan.create(level, data);
@@ -51,12 +57,12 @@ public final class TreeAssembler {
         // The chopped block is excluded from the body. A tip with nothing above it is still a fell:
         // harvest that log in place instead of letting DT spawn a falling tree.
         if (plan.branches().isEmpty()) {
-            return DtIntegration.mutateWithoutNetworkDestroy(() -> harvestCut(level, player, plan));
+            return DtIntegration.mutateWithoutNetworkDestroy(() -> harvestCut(level, player, plan, drops));
         }
         if (!plan.validate(DtSableConfig.maxBlocks())) return null;
         Map<BlockPos, BlockState> source = captureSource(level, plan);
         try {
-            return DtIntegration.mutateWithoutNetworkDestroy(() -> convert(level, player, plan, source));
+            return DtIntegration.mutateWithoutNetworkDestroy(() -> convert(level, player, plan, source, drops));
         } catch (RuntimeException | StackOverflowError failure) {
             DtSable.LOGGER.error("Failed to convert Dynamic Tree at {}; restoring it for native DT felling",
                     plan.cutPos(), failure);
@@ -66,11 +72,15 @@ public final class TreeAssembler {
     }
 
     /** One log, the cut's leaves, and its trunk shells. No body and no topple. */
-    private static UUID harvestCut(ServerLevel level, Player player, FelledTreePlan plan) {
+    private static UUID harvestCut(ServerLevel level, Player player, FelledTreePlan plan,
+                                   BiConsumer<BlockPos, ItemStack> drops) {
         BlockPos cut = plan.cutPos();
         BlockState cutState = level.getBlockState(cut);
-        if (player == null || !player.isCreative()) spawnDrops(level, cut, plan.cutDrops());
-        for (FelledTreePlan.Node leaf : plan.leaves()) TreeHarvest.breakStandingLeaf(level, leaf.pos());
+        if (player == null || !player.isCreative()) spawnDrops(level, cut, plan.cutDrops(), drops);
+        for (FelledTreePlan.Node leaf : plan.leaves()) {
+            if (drops == null) TreeHarvest.breakStandingLeaf(level, leaf.pos());
+            else TreeHarvest.breakStandingLeaf(level, leaf.pos(), drops);
+        }
         if (DtIntegration.radius(cutState) > WoodThickness.PRIMARY) {
             for (int dx = -1; dx <= 1; dx++) for (int dz = -1; dz <= 1; dz++) {
                 if (dx == 0 && dz == 0) continue;
@@ -85,7 +95,7 @@ public final class TreeAssembler {
     }
 
     private static UUID convert(ServerLevel level, Player player, FelledTreePlan plan,
-                                Map<BlockPos, BlockState> source) {
+                                Map<BlockPos, BlockState> source, BiConsumer<BlockPos, ItemStack> drops) {
         clearSource(level, source.keySet());
         Map<BlockPos, FelledTreePlan.Node> branches = new HashMap<>();
         Map<BlockPos, FelledTreePlan.Node> leaves = new HashMap<>();
@@ -114,7 +124,7 @@ public final class TreeAssembler {
         }
 
         for (FallenTreeBody body : bodies) FallenTreeRegistry.scheduleTopple(body, plan.cutPos(), player);
-        spawnDrops(level, plan.cutPos(), plan.cutDrops());
+        spawnDrops(level, plan.cutPos(), plan.cutDrops(), drops);
         DtSable.LOGGER.info("Converted Dynamic Tree at {} to {} Sable bodies ({} branches, {} leaves)",
                 plan.cutPos(), bodies.size(), plan.branches().size(), plan.leaves().size());
         return bodies.getFirst().id();
@@ -233,8 +243,13 @@ public final class TreeAssembler {
         return to.offset(pos.getX() - from.getX(), pos.getY() - from.getY(), pos.getZ() - from.getZ());
     }
 
-    private static void spawnDrops(ServerLevel level, BlockPos pos, List<ItemStack> drops) {
-        for (ItemStack stack : drops) {
+    private static void spawnDrops(ServerLevel level, BlockPos pos, List<ItemStack> stacks,
+                                   BiConsumer<BlockPos, ItemStack> drops) {
+        for (ItemStack stack : stacks) {
+            if (drops != null) {
+                drops.accept(pos, stack.copy());
+                continue;
+            }
             ItemEntity item = new ItemEntity(level, pos.getX() + .5, pos.getY() + .5, pos.getZ() + .5, stack.copy());
             item.setDefaultPickUpDelay();
             level.addFreshEntity(item);
