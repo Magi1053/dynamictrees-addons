@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1.3
+
+- Moving Create contraption drills fell standing Dynamic Trees into Sable bodies and route cut drops through Create's mounted storage and overflow handling.
+- Fixed, contraption, and Aeronautics-mounted saws share grown-volume loot and radius-scaled speed through Create's tree queue and native drop callbacks.
+- Saw cuts remove supported leaves as well as branches without creating Sable tree bodies.
+
 ## 1.1.2
 
 - Moving Create saws mill Dynamic Trees into contraption storage, with excess drops ejected beside the saw.

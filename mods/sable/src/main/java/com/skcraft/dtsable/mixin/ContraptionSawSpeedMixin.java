@@ -10,12 +10,11 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
-/** The moving saw's progress loop is inherited from the common breaker behaviour. */
 @Mixin(value = BlockBreakingMovementBehaviour.class, remap = false)
 public abstract class ContraptionSawSpeedMixin {
     @Redirect(method = "tickBreaker", at = @At(value = "INVOKE",
             target = "Lnet/minecraft/world/level/block/state/BlockState;getDestroySpeed(Lnet/minecraft/world/level/BlockGetter;Lnet/minecraft/core/BlockPos;)F"))
-    private float dtsable$logCuttingSpeed(BlockState state, BlockGetter level, BlockPos pos) {
+    private float dtsable$cuttingHardness(BlockState state, BlockGetter level, BlockPos pos) {
         if ((Object) this instanceof SawMovementBehaviour && SawCut.isCuttable(state)) {
             return SawCut.breakingHardness(state, level, pos, false);
         }

@@ -199,8 +199,10 @@ thick-trunk shells resolve their muse core and use the core's radius.
 
 A mechanical saw or drill uses the same ratio as its destroy speed, so the break
 takes about as long as an axe chop on that thickness.
-Moving contraption saws use the same primitive-log hardness and radius ratio as
-stationary saws. Create's normal movement/RPM speed still controls progress.
+Fixed, contraption, and Aeronautics-mounted saws use primitive-log hardness scaled
+by trunk radius and Sable's grown-volume wood loot. Create's tree queue and drop
+callbacks handle collection and overflow. The DT queue adapter removes supported
+branches and recorded leaves without converting the cut into a Sable body.
 
 ### Fallen, per block
 `destroyProgress = primitiveLogProgress * fallen_wood_mining_speed / max(1, radius / 8)`.
@@ -221,10 +223,10 @@ Axe: one durability per harvested fallen block. Skip DT `damageAxe` volume hit.
 ## 7. Harvest on a fallen body
 
 `TreeHarvest.breakAt` / `snapFrom` is the only removal path for SubLevel DT wood.
-A horizontal Create mechanical saw uses that path on a fallen body. On a
-standing trunk or shell it mills the cut and everything supported through it:
-those blocks pop and drop their wood and leaves, and the stump below the cut
-stays. A mechanical drill uses that same fallen-body chop, and on a standing
+A horizontal Create mechanical saw uses that path on a managed fallen body.
+On standing trees, mechanical saws (including Aeronautics-mounted saws) use
+Create's tree queue and drop callbacks with grown-volume loot and radius-scaled speed. A mechanical
+drill uses that same fallen-body chop, and on a standing
 trunk or shell it calls DT `futureBreak`, so the crown converts to a SubLevel
 and the cut pays one log.
 
@@ -452,18 +454,20 @@ Fallen mining
 - [ ] Mining a thin branch removes that limb only
 - [ ] Trunk shells mine at the core's speed and break with the core
 
-Create contraption saws
+Create saws and drills
+- [ ] A moving Create contraption drill fells a standing Dynamic Tree into Sable bodies, leaves the stump, and collects only the cut drops into mounted storage
+- [ ] With full or absent mounted storage, a contraption drill ejects cut drops through Create's normal overflow handling
+- [ ] Contraption drills harvesting managed fallen wood do not re-fell it, and ordinary blocks retain native Create drilling
 - [ ] A sublevel-mounted mechanical drill fells standing Dynamic Trees and routes the cut-block drop through native ejection or Simulated's connected storage
 - [ ] A mechanical drill harvesting fallen wood routes logs, sticks, seeds, and other loot through its native callback, without producing a second falling tree
 - [ ] Drilling a standing stump tip routes its wood and leaf drops through the same native callback; a subsequent player chop still drops normally
 - [ ] A powered saw mounted directly on a moving/rotated Sable sublevel cuts a standing Dynamic Tree using Create's normal item ejection; with a Simulated storage connection, its drops enter connected storage
 - [ ] A sublevel-mounted saw chopping a fallen body ejects overflow locally, without launch speeds caused by distances between plot coordinates
-- [ ] At the same Create speed, radius-8 standing wood cuts near vanilla log time; radius-16 takes about twice as long and radius-24 about three times as long
-- [ ] Cutting a thick-trunk shell uses its core radius, while leaves retain their own hardness
-- [ ] A moving horizontal saw with an attached empty chest mills a standing Dynamic Tree into chest items, including the cut block; the stump stays and no falling body is created
+- [ ] A moving horizontal saw cuts a Dynamic Tree using Create's native integration, removes its leaves, and collects its drops into an attached chest without creating a Sable body
+- [ ] Fixed, contraption, and Aeronautics-mounted saws use the same radius-scaled primitive-log hardness and grown-volume loot for the same tree
+- [ ] Aeronautics-mounted saws remove supported leaves and route grown-volume drops through native storage callbacks without creating a Sable tree body
 - [ ] With partially filled storage, accepted items enter storage and only the remainder is ejected beside the saw
 - [ ] With full storage or no storage, the complete harvest is ejected beside the saw instead of disappearing
-- [ ] A saw cutting owned fallen wood deposits wood and leaf drops into storage; overflow appears beside the saw rather than at Sable plot coordinates
 - [ ] Ordinary logs still use Create's normal tree cutting, and stationary saws still drop their harvest into the world
 
 These checks require a running Minecraft world: the pure Java tests do not exercise
