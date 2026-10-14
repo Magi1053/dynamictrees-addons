@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.4
+
+- Saw cuts play break particles from the recorded branch and leaf states after Dynamic Trees removes those blocks.
+- A moving contraption saw drops a stalled cut when the bearing leaves the block it was cutting.
+
 ## 1.1.3
 
 - Moving Create contraption drills fell standing Dynamic Trees into Sable bodies and route cut drops through Create's mounted storage and overflow handling.

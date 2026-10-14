@@ -202,7 +202,7 @@ takes about as long as an axe chop on that thickness.
 Fixed, contraption, and Aeronautics-mounted saws use primitive-log hardness scaled
 by trunk radius and Sable's grown-volume wood loot. Create's tree queue and drop
 callbacks handle collection and overflow. The DT queue adapter removes supported
-branches and recorded leaves without converting the cut into a Sable body.
+branches and recorded leaves without converting the cut into a Sable body. Break particles use those recorded states. A contraption saw cancels a stall when its bearing leaves the cut block.
 
 ### Fallen, per block
 `destroyProgress = primitiveLogProgress * fallen_wood_mining_speed / max(1, radius / 8)`.

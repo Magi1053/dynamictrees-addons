@@ -37,21 +37,33 @@ public final class CreateTreeHarvest {
                 Direction.DOWN, false, player == null ? SawCut.cutter(level, pos, target.pos()) : player);
         if (data == null || data.species == null || data.getNumBranches() == 0) return;
         dropWood(level, data, tool, drops);
-        // DT records leaf positions and loot, but Create's queue must finish removing
-        // the foliage. This never calls dropTree or assembles a Sable body.
+        // Replay effects from the recorded cut even when DT already removed the block.
+        // Effects need the recorded state: looking up an already removed block yields air.
         DtIntegration.mutateWithoutNetworkDestroy(() -> {
+            for (int i = 0; i < data.getNumBranches(); i++) {
+                BlockPos branch = DtIntegration.branchPos(data, i);
+                BlockState state = DtIntegration.branchState(data, i);
+                if (state == null) continue;
+                if (branch.equals(target.pos()) || level.random.nextBoolean()) breakEffect(level, branch, state);
+            }
             for (int i = 0; i < DtIntegration.leafCount(data); i++) {
                 BlockPos leaf = DtIntegration.leafPos(data, i);
-                BlockState state = level.getBlockState(leaf);
-                if (!DtIntegration.isLeaves(state)) continue;
-                level.setBlock(leaf, Blocks.AIR.defaultBlockState(), Block.UPDATE_ALL);
-                level.levelEvent(LevelEvent.PARTICLES_DESTROY_BLOCK, leaf, Block.getId(state));
+                BlockState state = DtIntegration.leafState(data, i);
+                if (state == null) continue;
+                if (DtIntegration.isLeaves(level.getBlockState(leaf))) {
+                    level.setBlock(leaf, Blocks.AIR.defaultBlockState(), Block.UPDATE_ALL);
+                }
+                if (level.random.nextInt(8) == 0) breakEffect(level, leaf, state);
             }
             return true;
         });
         for (BranchBlock.ItemStackPos leafDrop : data.leavesDrops) {
             if (!leafDrop.stack.isEmpty()) drops.accept(data.cutPos.offset(leafDrop.pos), leafDrop.stack);
         }
+    }
+
+    private static void breakEffect(ServerLevel level, BlockPos pos, BlockState state) {
+        level.levelEvent(LevelEvent.PARTICLES_DESTROY_BLOCK, pos, Block.getId(state));
     }
 
     private static void dropWood(ServerLevel level, BranchDestructionData data, ItemStack tool,
