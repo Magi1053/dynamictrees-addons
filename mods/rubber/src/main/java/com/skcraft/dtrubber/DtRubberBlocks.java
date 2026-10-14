@@ -4,6 +4,7 @@ import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.RotatedPillarBlock;
+import net.minecraft.world.level.block.SlabBlock;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.properties.NoteBlockInstrument;
@@ -34,12 +35,12 @@ public final class DtRubberBlocks {
 
     public static final DeferredBlock<Block> RUBBER_PLANKS = BLOCKS.register(
             "rubber_planks",
-            () -> new Block(BlockBehaviour.Properties.of()
-                    .mapColor(MapColor.WOOD)
-                    .instrument(NoteBlockInstrument.BASS)
-                    .strength(2.0F, 3.0F)
-                    .sound(SoundType.WOOD)
-                    .ignitedByLava())
+            () -> new Block(plankProperties())
+    );
+
+    public static final DeferredBlock<SlabBlock> RUBBER_SLAB = BLOCKS.register(
+            "rubber_slab",
+            () -> new SlabBlock(plankProperties())
     );
 
     public static final DeferredItem<BlockItem> STRIPPED_RUBBER_LOG_ITEM = ITEMS.register(
@@ -62,6 +63,11 @@ public final class DtRubberBlocks {
             () -> new BlockItem(RUBBER_PLANKS.get(), new Item.Properties())
     );
 
+    public static final DeferredItem<BlockItem> RUBBER_SLAB_ITEM = ITEMS.register(
+            "rubber_slab",
+            () -> new BlockItem(RUBBER_SLAB.get(), new Item.Properties())
+    );
+
     private DtRubberBlocks() {}
 
     public static void register(IEventBus modEventBus) {
@@ -74,6 +80,15 @@ public final class DtRubberBlocks {
                 .mapColor(mapColor)
                 .instrument(NoteBlockInstrument.BASS)
                 .strength(2.0F)
+                .sound(SoundType.WOOD)
+                .ignitedByLava();
+    }
+
+    private static BlockBehaviour.Properties plankProperties() {
+        return BlockBehaviour.Properties.of()
+                .mapColor(MapColor.WOOD)
+                .instrument(NoteBlockInstrument.BASS)
+                .strength(2.0F, 3.0F)
                 .sound(SoundType.WOOD)
                 .ignitedByLava();
     }

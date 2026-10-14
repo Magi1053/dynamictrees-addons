@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.49
+
+- Added rubber slabs, crafted from rubber planks.
+- Stripped rubber wood counts as a burnable log.
+
 ## 1.0.48
 
 - Fixed cutting speed

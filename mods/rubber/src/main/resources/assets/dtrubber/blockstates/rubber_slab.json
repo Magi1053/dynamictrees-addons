@@ -1,0 +1,13 @@
+{
+  "variants": {
+    "type=bottom": {
+      "model": "dtrubber:block/rubber_slab"
+    },
+    "type=double": {
+      "model": "dtrubber:block/rubber_planks"
+    },
+    "type=top": {
+      "model": "dtrubber:block/rubber_slab_top"
+    }
+  }
+}

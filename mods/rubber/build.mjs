@@ -260,11 +260,44 @@ function writeTreePack() {
 function writeBranchTags() {
     const branchBlocks = [`${MOD_ID}:${SPECIES}_branch`, `${MOD_ID}:stripped_${SPECIES}_branch`];
     writeTag("dynamictrees", "block", "branches_that_burn", branchBlocks);
-    writeTag("dynamictrees", "item", "branches_that_burn", branchBlocks);
+    writeJson(out("data", "dynamictrees", "tags", "item", "branches_that_burn.json"), {
+        values: [
+            `${MOD_ID}:${SPECIES}_branch`,
+            {
+                id: `${MOD_ID}:stripped_${SPECIES}_branch`,
+                required: false,
+            },
+        ],
+    });
     writeTag("dynamictrees", "block", "stripped_branches_that_burn", [`${MOD_ID}:stripped_${SPECIES}_branch`]);
 }
 
-function writeLootTables() {
+const TREE_LOOT = [
+    "trees/branches/rubber.json",
+    "trees/branches/stripped_rubber.json",
+    "trees/leaves/rubber.json",
+    "trees/voluntary/rubber.json",
+];
+
+function existingTreeLoot() {
+    const saved = new Map();
+    for (const relativePath of TREE_LOOT) {
+        const path = out("data", MOD_ID, "loot_table", relativePath);
+        if (existsSync(path)) {
+            saved.set(relativePath, readFileSync(path, "utf8"));
+        }
+    }
+    return saved;
+}
+
+function writeLootTables(preservedTreeLoot) {
+    if (!existsSync(dtLootBase)) {
+        for (const [relativePath, text] of preservedTreeLoot) {
+            writeText(out("data", MOD_ID, "loot_table", relativePath), text);
+        }
+        return;
+    }
+
     const replacements = [
         ["dynamictrees:jungle", `${MOD_ID}:${SPECIES}`],
         ["dynamictrees:trees/", `${MOD_ID}:trees/`],
@@ -399,6 +432,20 @@ function writeWoodAssets() {
         },
     });
 
+    writeJson(join(assetsRoot, "blockstates", "rubber_slab.json"), {
+        variants: {
+            "type=bottom": {
+                model: `${MOD_ID}:block/rubber_slab`,
+            },
+            "type=double": {
+                model: `${MOD_ID}:block/rubber_planks`,
+            },
+            "type=top": {
+                model: `${MOD_ID}:block/rubber_slab_top`,
+            },
+        },
+    });
+
     writeLogModels(assetsRoot, "rubber_log", "rubber_log");
     writeLogModels(assetsRoot, "stripped_rubber_log", "rubber_stripped_log");
     writeWoodBlockModel(assetsRoot, "stripped_rubber_wood", "rubber_stripped_log");
@@ -410,7 +457,21 @@ function writeWoodAssets() {
         },
     });
 
-    for (const itemName of ["rubber_log", "stripped_rubber_log", "stripped_rubber_wood", "rubber_planks"]) {
+    const slabTextures = {
+        bottom: `${MOD_ID}:block/rubber_planks`,
+        side: `${MOD_ID}:block/rubber_planks`,
+        top: `${MOD_ID}:block/rubber_planks`,
+    };
+    writeJson(join(assetsRoot, "models", "block", "rubber_slab.json"), {
+        parent: "minecraft:block/slab",
+        textures: slabTextures,
+    });
+    writeJson(join(assetsRoot, "models", "block", "rubber_slab_top.json"), {
+        parent: "minecraft:block/slab_top",
+        textures: slabTextures,
+    });
+
+    for (const itemName of ["rubber_log", "stripped_rubber_log", "stripped_rubber_wood", "rubber_planks", "rubber_slab"]) {
         writeJson(join(assetsRoot, "models", "item", `${itemName}.json`), {
             parent: `${MOD_ID}:block/${itemName}`,
         });
@@ -441,28 +502,78 @@ function writeWoodLootTables() {
             random_sequence: `${MOD_ID}:blocks/${blockName}`,
         });
     }
+
+    writeJson(out("data", MOD_ID, "loot_table", "blocks", "rubber_slab.json"), {
+        type: "minecraft:block",
+        pools: [
+            {
+                bonus_rolls: 0.0,
+                conditions: [
+                    {
+                        condition: "minecraft:survives_explosion",
+                    },
+                ],
+                entries: [
+                    {
+                        type: "minecraft:item",
+                        functions: [
+                            {
+                                add: false,
+                                conditions: [
+                                    {
+                                        block: `${MOD_ID}:rubber_slab`,
+                                        condition: "minecraft:block_state_property",
+                                        properties: {
+                                            type: "double",
+                                        },
+                                    },
+                                ],
+                                count: 2.0,
+                                function: "minecraft:set_count",
+                            },
+                            {
+                                function: "minecraft:explosion_decay",
+                            },
+                        ],
+                        name: `${MOD_ID}:rubber_slab`,
+                    },
+                ],
+                rolls: 1.0,
+            },
+        ],
+        random_sequence: `${MOD_ID}:blocks/rubber_slab`,
+    });
 }
 
 function writeWoodTags() {
-    const logItems = [`${MOD_ID}:rubber_log`, `${MOD_ID}:stripped_rubber_log`];
-    const logBlocks = logItems.concat([`${MOD_ID}:stripped_rubber_wood`]);
+    const strippedWood = `${MOD_ID}:stripped_rubber_wood`;
+    const logItems = [`${MOD_ID}:rubber_log`, `${MOD_ID}:stripped_rubber_log`, strippedWood];
+    const logBlocks = logItems;
     const planks = [`${MOD_ID}:rubber_planks`];
+    const slab = [`${MOD_ID}:rubber_slab`];
     const rubberLog = [`${MOD_ID}:rubber_log`];
     const strippedLog = [`${MOD_ID}:stripped_rubber_log`];
+    const strippedWoods = [strippedWood];
 
     writeTag(MOD_ID, "item", "rubber_logs", logItems);
     writeTag(MOD_ID, "block", "rubber_logs", logBlocks);
     writeTag("minecraft", "block", "logs", logBlocks);
     writeTag("minecraft", "block", "logs_that_burn", logBlocks);
-    writeTag("minecraft", "block", "mineable/axe", logBlocks.concat(planks));
+    writeTag("minecraft", "block", "mineable/axe", logBlocks.concat(planks, slab));
     writeTag("minecraft", "block", "planks", planks);
+    writeTag("minecraft", "block", "slabs", slab);
+    writeTag("minecraft", "block", "wooden_slabs", slab);
     writeTag("minecraft", "item", "logs", logItems);
     writeTag("minecraft", "item", "logs_that_burn", logItems);
     writeTag("minecraft", "item", "planks", planks);
+    writeTag("minecraft", "item", "slabs", slab);
+    writeTag("minecraft", "item", "wooden_slabs", slab);
     writeTag("c", "block", "logs", rubberLog);
     writeTag("c", "item", "logs", rubberLog);
     writeTag("c", "block", "stripped_logs", strippedLog);
     writeTag("c", "item", "stripped_logs", strippedLog);
+    writeTag("c", "block", "stripped_woods", strippedWoods);
+    writeTag("c", "item", "stripped_woods", strippedWoods);
     writeTag("c", "block", "planks", planks);
     writeTag("c", "item", "planks", planks);
 }
@@ -490,6 +601,20 @@ function writeWoodRecipes() {
         result: {
             count: 3,
             id: `${MOD_ID}:stripped_rubber_wood`,
+        },
+    });
+
+    writeJson(out("data", MOD_ID, "recipe", "rubber_slab.json"), {
+        type: "minecraft:crafting_shaped",
+        category: "building",
+        group: "wooden_slab",
+        key: {
+            "#": { item: `${MOD_ID}:rubber_planks` },
+        },
+        pattern: ["###"],
+        result: {
+            count: 6,
+            id: `${MOD_ID}:rubber_slab`,
         },
     });
 }
@@ -1029,6 +1154,10 @@ function writePetrolspartsOverrides() {
 }
 
 function writeCreateRubberOverrides() {
+    writeJson(out("assets", "create", "lang", "en_us.json"), {
+        "advancement.create.belt": "Rubberᵗᵐ Drive",
+    });
+
     const createLoaded = { "neoforge:conditions": [modLoadedCondition("create")] };
     const rubber = { tag: "c:rubber" };
     const rubberNine = { tag: "c:rubber", count: 9 };
@@ -1150,6 +1279,7 @@ function writeLang() {
         [`block.${MOD_ID}.stripped_rubber_log`]: "Stripped Rubber Log",
         [`block.${MOD_ID}.stripped_rubber_wood`]: "Stripped Rubber Wood",
         [`block.${MOD_ID}.rubber_planks`]: "Rubber Planks",
+        [`block.${MOD_ID}.rubber_slab`]: "Rubber Slab",
         [`block.${MOD_ID}.${SPECIES}_leaves`]: "Rubber Leaves",
         [`block.${MOD_ID}.${SPECIES}_sapling`]: "Rubber Sapling",
         [`item.${MOD_ID}.${SPECIES}_seed`]: "Rubber Seed",
@@ -1158,6 +1288,7 @@ function writeLang() {
         [`item.${MOD_ID}.rubber_ball`]: "Rubber Ball",
         [`item.${MOD_ID}.rubber_sheet`]: "Rubber Sheet",
         [`species.${MOD_ID}.${SPECIES}`]: "Rubber Tree",
+        [`emi.${MOD_ID}.raw_latex`]: "Strip rubber logs or thick rubber tree trunks with an axe to collect Raw Latex.",
     });
 }
 
@@ -1170,11 +1301,13 @@ function writePackMeta() {
     });
 }
 
+const preservedTreeLoot = existsSync(dtLootBase) ? new Map() : existingTreeLoot();
+
 rmSync(outRoot, { recursive: true, force: true });
 writeTreePack();
 writeTextures();
 writeBranchTags();
-writeLootTables();
+writeLootTables(preservedTreeLoot);
 writeWoodAssets();
 writeWoodLootTables();
 writeWoodTags();

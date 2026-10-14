@@ -9,6 +9,7 @@ public final class DtRubberCreative {
     public static void buildCreativeTabContents(BuildCreativeModeTabContentsEvent event) {
         if (event.getTabKey() == CreativeModeTabs.BUILDING_BLOCKS) {
             event.accept(DtRubberBlocks.RUBBER_PLANKS_ITEM);
+            event.accept(DtRubberBlocks.RUBBER_SLAB_ITEM);
             event.accept(DtRubberBlocks.STRIPPED_RUBBER_WOOD_ITEM);
             event.accept(DtRubberBlocks.STRIPPED_RUBBER_LOG_ITEM);
             event.accept(DtRubberBlocks.RUBBER_LOG_ITEM);
