@@ -1,7 +1,9 @@
 package com.skcraft.dtsable;
 
+import com.skcraft.dtsable.compat.CreateTreeHarvest;
 import com.skcraft.dtsable.dt.DtSableConfig;
 import com.skcraft.dtsable.tree.FallenTreeRegistry;
+import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
@@ -18,5 +20,6 @@ public class DtSable {
     public DtSable(IEventBus modEventBus, ModContainer container) {
         container.registerConfig(ModConfig.Type.COMMON, DtSableConfig.SPEC);
         NeoForge.EVENT_BUS.register(FallenTreeRegistry.class);
+        NeoForge.EVENT_BUS.addListener(EventPriority.LOWEST, CreateTreeHarvest::collectExtraDrops);
     }
 }

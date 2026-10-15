@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1.5
+
+- Create saws collect fruit, pods, and additional addon drops through native storage and overflow callbacks, preserving loot rules and item components.
+- Falling Dynamic Trees fruit and pods are harvested through their block loot instead of escaping collection.
+- Mechanical saw breaking cracks render on the visible core of trunks wider than one block.
+
 ## 1.1.4
 
 - Saw cuts play break particles from the recorded branch and leaf states after Dynamic Trees removes those blocks.
