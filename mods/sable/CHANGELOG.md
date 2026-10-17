@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.6
+
+- Limit Create saw branch and leaf break effects to eight per cut, reducing particle bursts on large trees.
+- Always show the cut-point effect and distribute the remaining effects across the tree.
+
 ## 1.1.5
 
 - Create saws collect fruit, pods, and additional addon drops through native storage and overflow callbacks, preserving loot rules and item components.

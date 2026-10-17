@@ -30,6 +30,8 @@ import java.util.function.BiConsumer;
 
 /** DT destruction and grown-volume loot behind Create's native tree queue and drop callbacks. */
 public final class CreateTreeHarvest {
+    private static final int MAX_EXTRA_BRANCH_EFFECTS = 3;
+    private static final int MAX_LEAF_EFFECTS = 4;
     private record CollectedDrop(BlockPos pos, ItemStack stack) {}
     private record HarvestCollection(ServerLevel level, List<CollectedDrop> drops) {
         void add(BlockPos pos, ItemStack stack) {
@@ -87,15 +89,17 @@ public final class CreateTreeHarvest {
                 Direction.DOWN, false, player == null ? SawCut.cutter(level, pos, target.pos()) : player);
         if (data == null || data.species == null || data.getNumBranches() == 0) return;
         dropWood(level, data, tool, drops);
-        // Replay effects from the recorded cut even when DT already removed the block.
-        // Effects need the recorded state: looking up an already removed block yields air.
+        // Use recorded states after destruction, with at most eight effects per cut.
+        breakEffect(level, target.pos(), target.state());
         DtIntegration.mutateWithoutNetworkDestroy(() -> {
-            for (int i = 0; i < data.getNumBranches(); i++) {
+            int branchStep = Math.max(2, Math.ceilDiv(data.getNumBranches(), MAX_EXTRA_BRANCH_EFFECTS));
+            for (int i = level.random.nextInt(branchStep); i < data.getNumBranches(); i += branchStep) {
                 BlockPos branch = DtIntegration.branchPos(data, i);
                 BlockState state = DtIntegration.branchState(data, i);
-                if (state == null) continue;
-                if (branch.equals(target.pos()) || level.random.nextBoolean()) breakEffect(level, branch, state);
+                if (state != null && !branch.equals(target.pos())) breakEffect(level, branch, state);
             }
+            int leafStep = Math.max(8, Math.ceilDiv(DtIntegration.leafCount(data), MAX_LEAF_EFFECTS));
+            int leafOffset = level.random.nextInt(leafStep);
             for (int i = 0; i < DtIntegration.leafCount(data); i++) {
                 BlockPos leaf = DtIntegration.leafPos(data, i);
                 BlockState state = DtIntegration.leafState(data, i);
@@ -103,7 +107,7 @@ public final class CreateTreeHarvest {
                 if (DtIntegration.isLeaves(level.getBlockState(leaf))) {
                     level.setBlock(leaf, Blocks.AIR.defaultBlockState(), Block.UPDATE_ALL);
                 }
-                if (level.random.nextInt(8) == 0) breakEffect(level, leaf, state);
+                if (i % leafStep == leafOffset) breakEffect(level, leaf, state);
             }
             return true;
         });
