@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.50
+
+- Rubber planks and slabs now count as a wood type.
+
 ## 1.0.49
 
 - Added rubber slabs, crafted from rubber planks.
