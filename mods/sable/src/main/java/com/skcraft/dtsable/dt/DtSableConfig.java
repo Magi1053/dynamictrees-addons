@@ -40,7 +40,7 @@ public final class DtSableConfig {
                 .comment("Skip physics and use the original DT falling entity above this many placed blocks.")
                 .defineInRange("max_blocks", 2000, 16, 20000);
         standing_wood_mining_speed = builder
-                .comment("Chop speed of a standing radius-8 trunk, relative to its primitive log. Thinner wood is faster and thicker wood is slower, linearly with radius. 1 matches a vanilla log.")
+                .comment("Chop speed of a standing radius-8 trunk, relative to its primitive log. Chopping time scales with trunk cross-sectional area (radius squared). 1 matches a vanilla log at radius 8.")
                 .defineInRange("standing_wood_mining_speed", 0.85D, 0.1D, 100.0D);
         fallen_wood_mining_speed = builder
                 .comment("Mining-speed multiplier for branches and trunk shells in managed Sable bodies.")

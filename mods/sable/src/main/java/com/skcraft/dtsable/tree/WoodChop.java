@@ -2,7 +2,7 @@ package com.skcraft.dtsable.tree;
 
 /**
  * How fast Dynamic Trees wood breaks compared with its primitive log.
- * 1 matches that log. Standing chops scale linearly with radius, so a radius-8
+ * 1 matches that log. Standing chop time scales with trunk area, so a radius-8
  * trunk uses the configured speed and a thicker trunk takes longer.
  */
 public final class WoodChop {
@@ -15,7 +15,10 @@ public final class WoodChop {
      */
     public static float relativeToPrimitiveLog(float configuredAtFullLog, int radius, boolean standing) {
         int r = Math.max(radius, 1);
-        if (standing) return configuredAtFullLog * WoodThickness.PRIMARY / r;
+        if (standing) {
+            float relativeRadius = r / (float) WoodThickness.PRIMARY;
+            return configuredAtFullLog / (relativeRadius * relativeRadius);
+        }
         float thickness = Math.max(1f, r / (float) WoodThickness.PRIMARY);
         return configuredAtFullLog / thickness;
     }

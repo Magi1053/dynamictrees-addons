@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.7
+
+- Thick-limbed trees such as BWG baobabs convert into Sable bodies instead of falling back to native Dynamic Trees felling when a generated trunk shell occupies another branch position.
+- Standing-tree chopping time scales with trunk cross-sectional area. One-block trunks keep their existing speed; a full 3×3 trunk takes nine times as long. Axes, trunk shells, saws, and drills share the scaling. Fallen-tree mining is unchanged.
+
 ## 1.1.6
 
 - Limit Create saw branch and leaf break effects to eight per cut, reducing particle bursts on large trees.

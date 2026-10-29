@@ -154,6 +154,12 @@ public final class TreeAssembler {
                     && !DtIntegration.isStrippedBranch(node.state())) {
                 unstrippedCore = true;
             }
+        }
+        // Place every real branch before generating trunk shells. A thick limb can
+        // otherwise fill a later branch's position with a shell, making our own
+        // partially reconstructed tree look like an obstruction (notably baobabs).
+        for (BlockPos pos : component.wood()) {
+            FelledTreePlan.Node node = branches.get(pos);
             if (node.radius() > WoodThickness.PRIMARY && node.state().getBlock() instanceof ThickBranchBlock branch) {
                 branch.setRadius(level, node.pos(), node.radius(), Direction.DOWN, FLAGS);
                 collectShells(level, node.pos(), placed, worldShellOwners);

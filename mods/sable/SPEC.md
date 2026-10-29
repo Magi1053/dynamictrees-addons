@@ -43,7 +43,7 @@ regression.
 |---|---|---|
 | Location | Overworld / dimension | Sable plot (`Sable.HELPER.getContaining != null`) |
 | DT network destroy | Allowed (`sloppyBreak`, `dropTree`) | Forbidden |
-| Mining speed | Primitive-log progress × `standing_wood_mining_speed` × 8 / radius | Primitive-log progress × `fallen_wood_mining_speed`, scaled by radius |
+| Mining speed | Primitive-log progress × `standing_wood_mining_speed` × (8 / radius)² | Primitive-log progress × `fallen_wood_mining_speed`, scaled by radius |
 | Harvest | DT whole-tree / branch cut | `TreeHarvest.breakAt` only |
 | Collision callback | Must do nothing | Leaves and limbs snap; cores never snap |
 | Renderer | Native DT | Native DT. No global baked-model rewrite |
@@ -58,8 +58,8 @@ These are testable. If a change breaks one, revert it.
 ### R1. Standing trees remain mineable
 A rooted DT branch, thick branch, or trunk shell must always be mineable with
 primitive-log tool-tier, enchantment, and status-effect scaling. The default
-`standing_wood_mining_speed` is 0.85 at radius 8, and other radii scale linearly
-from that. This override applies only to rooted DT
+`standing_wood_mining_speed` is 0.85 at radius 8, and chopping time scales with
+cross-sectional area (radius squared) from that. This override applies only to rooted DT
 wood outside a Sable SubLevel; unmanaged Sable bodies retain native behavior.
 
 ### R2. Fallen cores are actually removed, and wood pays its grown volume
@@ -189,18 +189,19 @@ fall through to DT network destruction for a persisted managed body.
 ## 6. Mining
 
 ### Standing
-`destroyProgress = primitiveLogProgress * standing_wood_mining_speed * 8 / radius`.
+`destroyProgress = primitiveLogProgress * standing_wood_mining_speed * (8 / radius)²`.
 
 The default multiplier is 0.85, so a radius-8 trunk is a little slower than its
-primitive log and not an exact match. A radius-4 trunk is twice as fast as that;
-a radius-16 trunk is half as fast. Primitive-log progress preserves axe material,
+primitive log and not an exact match. That one-block trunk keeps its previous speed.
+A radius-4 trunk is four times as fast as that; a radius-16 trunk takes four times
+as long, and a radius-24 (3×3) trunk takes nine times as long. Primitive-log progress preserves axe material,
 tool tier, Efficiency, Haste, Mining Fatigue, and correct-tool behavior. Standing
 thick-trunk shells resolve their muse core and use the core's radius.
 
 A mechanical saw or drill uses the same ratio as its destroy speed, so the break
 takes about as long as an axe chop on that thickness.
 Fixed, contraption, and Aeronautics-mounted saws use primitive-log hardness scaled
-by trunk radius and Sable's grown-volume wood loot. Create's tree queue and drop
+by trunk cross-sectional area and Sable's grown-volume wood loot. Create's tree queue and drop
 callbacks handle collection and overflow. The DT queue adapter removes supported
 branches and recorded leaves without converting the cut into a Sable body. Break particles use those recorded states. A contraption saw cancels a stall when its bearing leaves the cut block.
 
