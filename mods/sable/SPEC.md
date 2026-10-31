@@ -429,6 +429,7 @@ Standing
 - [ ] Chopping a core junction creates one body per disconnected crown branch,
       even when their leaves touch
 - [ ] Crack overlay shows on the top AND the bark sides of a thick core
+- [ ] Particles sourced from a trunk shell use its owning core's bark sprite, including NeoForge's position-aware sprite refresh
 - [ ] Canopy snag in another tree: foliage gives; the trunk falls, it does not levitate
 - [ ] Mid-branch / tip cut leaves the stump planted; the trunk does not levitate
 - [ ] Addon disabled: DT entity, DT hardness, DT loot

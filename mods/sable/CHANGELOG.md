@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.8
+
+- Trunk-shell particles use the owning tree's bark texture instead of the missing-texture sprite, including thick baobab trunks.
+
 ## 1.1.7
 
 - Thick-limbed trees such as BWG baobabs convert into Sable bodies instead of falling back to native Dynamic Trees felling when a generated trunk shell occupies another branch position.
