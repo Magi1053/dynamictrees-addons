@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.9
+
+- Slow wrong-tool trunk breaks delete the connected tree without loot or a falling physics body. Thin twigs remain punchable for partial sticks and occasional seeds.
+
 ## 1.1.8
 
 - Trunk-shell particles use the owning tree's bark texture instead of the missing-texture sprite, including thick baobab trunks.

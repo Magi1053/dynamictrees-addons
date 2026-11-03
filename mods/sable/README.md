@@ -20,6 +20,7 @@ Behavior contract: [SPEC.md](SPEC.md). Implement against those rules; a fix that
 | NeoForge | Yes |
 | [Dynamic Trees](https://modrinth.com/mod/dynamictrees) | Yes |
 | [Sable](https://modrinth.com/mod/sable) | Yes |
+| [BlueMap3D](https://modrinth.com/mod/bluemap3d) | Optional |
 
 ## Create integration
 
@@ -32,6 +33,10 @@ Behavior contract: [SPEC.md](SPEC.md). Implement against those rules; a fix that
 - Moving saws discard stale cutting targets when they leave the target block, preventing a regrown tree from being cut remotely. Ordinary blocks retain Create's normal behavior.
 
 Rotated aircraft and Simulated connected storage have not been verified in game.
+
+## Player tool policy
+
+Survival players need a usable axe to chop branches thicker than radius 2. Completing a slow wrong-tool trunk break deletes the entire connected tree without drops or physics conversion. Radius-1 and radius-2 twigs remain punchable, yielding partial sticks and occasional seeds without a falling body. Creative breaking and Create machinery keep their normal behavior.
 
 ## Notes
 

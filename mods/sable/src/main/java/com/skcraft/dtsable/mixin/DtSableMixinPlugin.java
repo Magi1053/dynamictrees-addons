@@ -3,6 +3,7 @@ package com.skcraft.dtsable.mixin;
 import org.objectweb.asm.tree.ClassNode;
 import org.spongepowered.asm.mixin.extensibility.IMixinConfigPlugin;
 import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
+import net.neoforged.fml.loading.LoadingModList;
 
 import java.util.List;
 import java.util.Set;
@@ -19,6 +20,11 @@ public class DtSableMixinPlugin implements IMixinConfigPlugin {
 
     @Override
     public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
+        if (mixinClassName.startsWith("com.skcraft.dtsable.compat.bluemap3d.mixin.")) {
+            return Boolean.parseBoolean(System.getProperty("dtsable.bluemap3d", "true"))
+                    && LoadingModList.get().getMods().stream().anyMatch(mod ->
+                            mod.getModId().equals("bluemap3d") && mod.getVersion().toString().equals("1.1.0"));
+        }
         if (!JADE_VOLUME.equals(mixinClassName)) return true;
         try {
             Class.forName("snownee.jade.impl.ObjectDataCenter", false, DtSableMixinPlugin.class.getClassLoader());

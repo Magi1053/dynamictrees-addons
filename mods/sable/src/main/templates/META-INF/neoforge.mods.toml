@@ -14,6 +14,16 @@ displayURL="${mod_homepage}"
 [[mixins]]
 config="dtsable.mixins.json"
 
+[[mixins]]
+config="dtsable.bluemap3d.mixins.json"
+
+[[dependencies.${mod_id}]]
+modId="bluemap3d"
+type="optional"
+versionRange="[1.1.0,)"
+ordering="AFTER"
+side="SERVER"
+
 [[dependencies.${mod_id}]]
 modId="neoforge"
 type="required"

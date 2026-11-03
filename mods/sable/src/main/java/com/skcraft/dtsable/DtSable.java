@@ -20,6 +20,7 @@ public class DtSable {
     public DtSable(IEventBus modEventBus, ModContainer container) {
         container.registerConfig(ModConfig.Type.COMMON, DtSableConfig.SPEC);
         NeoForge.EVENT_BUS.register(FallenTreeRegistry.class);
+        NeoForge.EVENT_BUS.register(com.skcraft.dtsable.dt.TreeToolPolicy.class);
         NeoForge.EVENT_BUS.addListener(EventPriority.LOWEST, CreateTreeHarvest::collectExtraDrops);
     }
 }
