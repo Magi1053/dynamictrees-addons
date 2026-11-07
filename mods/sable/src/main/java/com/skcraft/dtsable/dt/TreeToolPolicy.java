@@ -22,7 +22,7 @@ import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.level.BlockEvent;
 
 /**
- * Native player tool policy: discard wrong-tool trunks without loot or a falling body.
+ * Native player tool policy: discard wrong-tool cuts without loot or a falling body.
  * Thin twigs remain punchable for partial sticks and occasional seeds.
  */
 public final class TreeToolPolicy {
@@ -97,7 +97,7 @@ public final class TreeToolPolicy {
         event.setCanceled(true);
     }
 
-    /** Discard the entire connected tree without calling DT/Sable's falling-tree path. */
+    /** Discard only the normal DT cut without calling DT/Sable's falling-tree path. */
     private static boolean discardWrongToolTree(BlockEvent.BreakEvent event) {
         if (event.isCanceled() || !shouldDiscardTrunk(event.getState(), event.getPlayer())
                 || !(event.getLevel() instanceof ServerLevel level)) return false;
@@ -108,7 +108,9 @@ public final class TreeToolPolicy {
         try {
             level.getGameRules().getRule(GameRules.RULE_DOBLOCKDROPS).set(false, level.getServer());
             // No player initiator: connected decorations must not invoke playerDestroy loot.
-            branch.destroyBranchFromNode(level, event.getPos(), EntityUtils.getHitDirection(event.getPlayer()), true, null);
+            // Use DT's root-direction calculation, just like a normal cut. Whole-tree
+            // destruction would also traverse toward the roots and erase the standing tree.
+            branch.destroyBranchFromNode(level, event.getPos(), EntityUtils.getHitDirection(event.getPlayer()), false, null);
             level.levelEvent(2001, event.getPos(), Block.getId(event.getState()));
         } finally {
             BranchBlock.destroyMode = previousMode;

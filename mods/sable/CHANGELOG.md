@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.10
+
+- Wrong-tool branch breaks use Dynamic Trees' normal cut calculation, removing only the portion beyond the cut and preserving the rooted remainder instead of deleting the entire connected tree.
+
 ## 1.1.9
 
 - Slow wrong-tool trunk breaks delete the connected tree without loot or a falling physics body. Thin twigs remain punchable for partial sticks and occasional seeds.
