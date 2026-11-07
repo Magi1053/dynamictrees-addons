@@ -455,6 +455,11 @@ function writePrimitiveSaplingReplacement() {
     const saplingBlocks = COLORS.map((color) => `${TREE_NS}:${color}_sapling`);
 
     writeJson(join(outRoot, "data", TREE_NS, "tags", "item", "colored_seeds.json"), { values: seeds });
+    writeJson(join(outRoot, "data", "dynamictrees", "tags", "item", "seeds.json"), { values: seeds });
+    writeJson(join(outRoot, "data", "dynamictrees", "tags", "block", "saplings.json"), { values: saplingBlocks });
+    writeJson(join(outRoot, "data", "dynamictrees", "tags", "block", "leaves.json"), {
+        values: COLORS.map((color) => `${TREE_NS}:${color}_leaves`),
+    });
     writeJson(join(outRoot, "data", "spectrum", "tags", "item", "colored_saplings.json"), {
         replace: false,
         values: seeds,

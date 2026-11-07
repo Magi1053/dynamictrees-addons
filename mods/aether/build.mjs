@@ -1210,6 +1210,40 @@ for (const tree of TREES) {
     writeSaplingLootOverride(tree);
 }
 writeCrystalSkyroot();
+writeJson(out("data", "dynamictrees", "tags", "item", "seeds.json"), {
+    values: TREES.map((tree) => {
+        const id = `${TREE_NS}:${tree.id}_seed`;
+        return tree.modId === "deep_aether" ? { id: id, required: false } : id;
+    }),
+});
+writeJson(out("data", "dynamictrees", "tags", "block", "saplings.json"), {
+    values: TREES.map((tree) => {
+        const id = `${TREE_NS}:${tree.id}_sapling`;
+        return tree.modId === "deep_aether" ? { id: id, required: false } : id;
+    }),
+});
+writeJson(out("data", "dynamictrees", "tags", "block", "leaves.json"), {
+    values: [
+        ...TREES.map((tree) => {
+            const id = `${TREE_NS}:${tree.id}_leaves`;
+            return tree.modId === "deep_aether" ? { id: id, required: false } : id;
+        }),
+        `${TREE_NS}:crystal_skyroot_leaves`,
+        `${TREE_NS}:crystal_skyroot_fruit_leaves`,
+    ],
+});
+writeJson(out("data", "dynamictrees", "tags", "block", "rooty_soil.json"), {
+    values: SOIL_PROPERTIES.map((soil) => {
+        const id = `${TREE_NS}:rooty_${soil.name}`;
+        return soil.only_if_loaded ? { id: id, required: false } : id;
+    }),
+});
+writeJson(out("data", "dynamictrees", "tags", "block", "roots.json"), {
+    values: [{ id: `${TREE_NS}:yagroot_roots`, required: false }],
+});
+writeJson(out("data", "dynamictrees", "tags", "block", "aerial_roots_rooty_soil.json"), {
+    values: [{ id: `${TREE_NS}:rooty_yagroot_aerial_roots`, required: false }],
+});
 writeDynamictreesBranchTags();
 writeWorldgen();
 

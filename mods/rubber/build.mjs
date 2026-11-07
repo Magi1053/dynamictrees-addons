@@ -1307,6 +1307,15 @@ rmSync(outRoot, { recursive: true, force: true });
 writeTreePack();
 writeTextures();
 writeBranchTags();
+writeJson(out("data", "dynamictrees", "tags", "item", "seeds.json"), {
+    values: [`${MOD_ID}:${SPECIES}_seed`],
+});
+writeJson(out("data", "dynamictrees", "tags", "block", "saplings.json"), {
+    values: [`${MOD_ID}:${SPECIES}_sapling`],
+});
+writeJson(out("data", "dynamictrees", "tags", "block", "leaves.json"), {
+    values: [`${MOD_ID}:${SPECIES}_leaves`],
+});
 writeLootTables(preservedTreeLoot);
 writeWoodAssets();
 writeWoodLootTables();

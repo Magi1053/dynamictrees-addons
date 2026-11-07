@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.22
+
+- Tag colored seeds, saplings, and leaves for Dynamic Trees compatibility.
+
 ## 1.0.21
 
 - DT colored leaves drop seeds at a usable chop rate and pigment at a reduced per-leaf chance (vanilla 20% floods a DT canopy).

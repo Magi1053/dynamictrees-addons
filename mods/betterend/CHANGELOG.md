@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.3
+
+- Tag BetterEnd rooty soils for Dynamic Trees compatibility.
+
 ## 1.0.2
 
 - Better end fixes

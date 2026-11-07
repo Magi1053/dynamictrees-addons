@@ -1,0 +1,30 @@
+{
+    "values": [
+        {
+            "id": "dtaether:blue_roseroot_sapling",
+            "required": false
+        },
+        {
+            "id": "dtaether:conberry_sapling",
+            "required": false
+        },
+        {
+            "id": "dtaether:cruderoot_sapling",
+            "required": false
+        },
+        "dtaether:golden_oak_sapling",
+        {
+            "id": "dtaether:roseroot_sapling",
+            "required": false
+        },
+        "dtaether:skyroot_sapling",
+        {
+            "id": "dtaether:sunroot_sapling",
+            "required": false
+        },
+        {
+            "id": "dtaether:yagroot_sapling",
+            "required": false
+        }
+    ]
+}
