@@ -2,8 +2,20 @@
   "values": [
     "dtrubber:rubber_log",
     "dtrubber:stripped_rubber_log",
+    "dtrubber:rubber_wood",
     "dtrubber:stripped_rubber_wood",
     "dtrubber:rubber_planks",
-    "dtrubber:rubber_slab"
+    "dtrubber:rubber_slab",
+    "dtrubber:rubber_stairs",
+    "dtrubber:rubber_fence",
+    "dtrubber:rubber_fence_gate",
+    "dtrubber:rubber_door",
+    "dtrubber:rubber_trapdoor",
+    "dtrubber:rubber_button",
+    "dtrubber:rubber_pressure_plate",
+    "dtrubber:rubber_sign",
+    "dtrubber:rubber_hanging_sign",
+    "dtrubber:rubber_wall_sign",
+    "dtrubber:rubber_wall_hanging_sign"
   ]
 }

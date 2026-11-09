@@ -42,19 +42,7 @@ public final class RubberBallProjectile extends ThrowableItemProjectile {
     protected void onHitEntity(EntityHitResult hitResult) {
         super.onHitEntity(hitResult);
         Entity target = hitResult.getEntity();
-        Vec3 horizontalVelocity = new Vec3(this.getDeltaMovement().x, 0.0, this.getDeltaMovement().z);
-
-        if (horizontalVelocity.lengthSqr() < 1.0E-6) {
-            horizontalVelocity = target.position().subtract(this.position()).multiply(1.0, 0.0, 1.0);
-        }
-        if (horizontalVelocity.lengthSqr() < 1.0E-6 && this.getOwner() != null) {
-            horizontalVelocity = target.position().subtract(this.getOwner().position()).multiply(1.0, 0.0, 1.0);
-        }
-        if (horizontalVelocity.lengthSqr() < 1.0E-6) {
-            horizontalVelocity = new Vec3(0.0, 0.0, 1.0);
-        }
-
-        Vec3 push = horizontalVelocity.normalize().scale(KNOCKBACK_IMPULSE);
+        Vec3 push = horizontalAway(target).normalize().scale(KNOCKBACK_IMPULSE);
 
         // Register a normal thrown-hit interaction (0 damage), then force movement so knockback is visible.
         target.hurt(this.damageSources().thrown(this, this.getOwner()), 0.0F);
@@ -92,11 +80,22 @@ public final class RubberBallProjectile extends ThrowableItemProjectile {
         this.bounces = tag.getInt("RubberBallBounces");
     }
 
+    private Vec3 horizontalAway(Entity target) {
+        Vec3 horizontal = new Vec3(this.getDeltaMovement().x, 0.0, this.getDeltaMovement().z);
+        if (horizontal.lengthSqr() < 1.0E-6) {
+            horizontal = flatDelta(target.position(), this.position());
+        }
+        if (horizontal.lengthSqr() < 1.0E-6 && this.getOwner() != null) {
+            horizontal = flatDelta(target.position(), this.getOwner().position());
+        }
+        return horizontal.lengthSqr() < 1.0E-6 ? new Vec3(0.0, 0.0, 1.0) : horizontal;
+    }
+
     private void bounce(HitResult hitResult) {
         Vec3 velocity = this.getDeltaMovement();
         Vec3 normal = switch (hitResult.getType()) {
             case BLOCK -> Vec3.atLowerCornerOf(((BlockHitResult) hitResult).getDirection().getNormal());
-            case ENTITY -> this.entityBounceNormal((EntityHitResult) hitResult, velocity);
+            case ENTITY -> entityBounceNormal((EntityHitResult) hitResult, velocity);
             default -> new Vec3(0.0, 1.0, 0.0);
         };
 
@@ -117,13 +116,14 @@ public final class RubberBallProjectile extends ThrowableItemProjectile {
     }
 
     private Vec3 entityBounceNormal(EntityHitResult hitResult, Vec3 velocity) {
-        Vec3 normal = this.position().subtract(hitResult.getEntity().position()).multiply(1.0, 0.0, 1.0);
+        Vec3 normal = flatDelta(this.position(), hitResult.getEntity().position());
         if (normal.lengthSqr() < 1.0E-6) {
             normal = velocity.scale(-1.0).multiply(1.0, 0.0, 1.0);
         }
-        if (normal.lengthSqr() < 1.0E-6) {
-            normal = new Vec3(0.0, 0.0, 1.0);
-        }
-        return normal;
+        return normal.lengthSqr() < 1.0E-6 ? new Vec3(0.0, 0.0, 1.0) : normal;
+    }
+
+    private static Vec3 flatDelta(Vec3 to, Vec3 from) {
+        return to.subtract(from).multiply(1.0, 0.0, 1.0);
     }
 }

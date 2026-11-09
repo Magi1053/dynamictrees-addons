@@ -1,4 +1,5 @@
-import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
@@ -343,12 +344,60 @@ function writeTextures() {
     const texturesRoot = out("assets", MOD_ID, "textures");
     cpSync(join(bundledAssets, "textures"), texturesRoot, { recursive: true });
 
-    for (const srcName of ["_src_birch_planks.png", "_src_stripped_jungle_log.png"]) {
-        const path = join(texturesRoot, "block", srcName);
-        if (existsSync(path)) {
+    const cleanupRoots = [
+        join(texturesRoot, "block"),
+        join(texturesRoot, "item"),
+        join(texturesRoot, "entity"),
+    ];
+    for (const root of cleanupRoots) {
+        cleanupSrcTextures(root);
+    }
+}
+
+function cleanupSrcTextures(dir) {
+    if (!existsSync(dir)) {
+        return;
+    }
+    for (const name of readdirSync(dir)) {
+        const path = join(dir, name);
+        if (statSync(path).isDirectory()) {
+            cleanupSrcTextures(path);
+            continue;
+        }
+        if (name.startsWith("_src_")) {
             rmSync(path, { force: true });
         }
     }
+}
+
+function findMinecraftResourcesJar() {
+    const artifacts = join(__dirname, "build", "moddev", "artifacts");
+    if (!existsSync(artifacts)) {
+        return null;
+    }
+    const jars = readdirSync(artifacts)
+        .filter((name) => name.includes("client-extra") && name.endsWith(".jar"))
+        .map((name) => join(artifacts, name))
+        .sort((a, b) => statSync(b).mtimeMs - statSync(a).mtimeMs);
+    return jars[0] || null;
+}
+
+function extractJarEntries(jar, entries) {
+    const temp = mkdtempSync(join(tmpdir(), "dtrubber-mc-"));
+    const result = spawnSync("jar", ["xf", jar, ...entries], { cwd: temp, encoding: "utf8" });
+    if (result.status !== 0) {
+        rmSync(temp, { recursive: true, force: true });
+        throw new Error(`Failed extracting vanilla assets: ${result.stderr || result.stdout}`);
+    }
+    return temp;
+}
+
+function remapBirchWoodText(text) {
+    return text
+        .replaceAll("minecraft:block/birch_", `${MOD_ID}:block/rubber_`)
+        .replaceAll("minecraft:item/birch_", `${MOD_ID}:item/rubber_`)
+        .replaceAll("minecraft:block/birch", `${MOD_ID}:block/rubber`)
+        .replaceAll("\"birch_", `"rubber_`);
 }
 
 function logBlockstateVariants(modelBase) {
@@ -411,50 +460,110 @@ function writeWoodBlockModel(assetsRoot, modelBase, sideTexture) {
 
 function writeWoodAssets() {
     const assetsRoot = out("assets", MOD_ID);
+    const jar = findMinecraftResourcesJar();
+    if (!jar) {
+        throw new Error("Missing Minecraft client-extra jar under build/moddev/artifacts; run a rubber Gradle build once first.");
+    }
+
+    const birchAssetEntries = [
+        "assets/minecraft/blockstates/birch_wood.json",
+        "assets/minecraft/blockstates/birch_stairs.json",
+        "assets/minecraft/blockstates/birch_fence.json",
+        "assets/minecraft/blockstates/birch_fence_gate.json",
+        "assets/minecraft/blockstates/birch_door.json",
+        "assets/minecraft/blockstates/birch_trapdoor.json",
+        "assets/minecraft/blockstates/birch_button.json",
+        "assets/minecraft/blockstates/birch_pressure_plate.json",
+        "assets/minecraft/blockstates/birch_sign.json",
+        "assets/minecraft/blockstates/birch_wall_sign.json",
+        "assets/minecraft/blockstates/birch_hanging_sign.json",
+        "assets/minecraft/blockstates/birch_wall_hanging_sign.json",
+        "assets/minecraft/models/block/birch_wood.json",
+        "assets/minecraft/models/block/birch_stairs.json",
+        "assets/minecraft/models/block/birch_stairs_inner.json",
+        "assets/minecraft/models/block/birch_stairs_outer.json",
+        "assets/minecraft/models/block/birch_fence_post.json",
+        "assets/minecraft/models/block/birch_fence_side.json",
+        "assets/minecraft/models/block/birch_fence_inventory.json",
+        "assets/minecraft/models/block/birch_fence_gate.json",
+        "assets/minecraft/models/block/birch_fence_gate_open.json",
+        "assets/minecraft/models/block/birch_fence_gate_wall.json",
+        "assets/minecraft/models/block/birch_fence_gate_wall_open.json",
+        "assets/minecraft/models/block/birch_door_bottom_left.json",
+        "assets/minecraft/models/block/birch_door_bottom_left_open.json",
+        "assets/minecraft/models/block/birch_door_bottom_right.json",
+        "assets/minecraft/models/block/birch_door_bottom_right_open.json",
+        "assets/minecraft/models/block/birch_door_top_left.json",
+        "assets/minecraft/models/block/birch_door_top_left_open.json",
+        "assets/minecraft/models/block/birch_door_top_right.json",
+        "assets/minecraft/models/block/birch_door_top_right_open.json",
+        "assets/minecraft/models/block/birch_trapdoor_bottom.json",
+        "assets/minecraft/models/block/birch_trapdoor_top.json",
+        "assets/minecraft/models/block/birch_trapdoor_open.json",
+        "assets/minecraft/models/block/birch_button.json",
+        "assets/minecraft/models/block/birch_button_pressed.json",
+        "assets/minecraft/models/block/birch_button_inventory.json",
+        "assets/minecraft/models/block/birch_pressure_plate.json",
+        "assets/minecraft/models/block/birch_pressure_plate_down.json",
+        "assets/minecraft/models/block/birch_sign.json",
+        "assets/minecraft/models/block/birch_hanging_sign.json",
+        "assets/minecraft/models/item/birch_wood.json",
+        "assets/minecraft/models/item/birch_stairs.json",
+        "assets/minecraft/models/item/birch_fence.json",
+        "assets/minecraft/models/item/birch_fence_gate.json",
+        "assets/minecraft/models/item/birch_door.json",
+        "assets/minecraft/models/item/birch_trapdoor.json",
+        "assets/minecraft/models/item/birch_button.json",
+        "assets/minecraft/models/item/birch_pressure_plate.json",
+        "assets/minecraft/models/item/birch_sign.json",
+        "assets/minecraft/models/item/birch_hanging_sign.json",
+        "assets/minecraft/models/item/birch_boat.json",
+        "assets/minecraft/models/item/birch_chest_boat.json",
+    ];
+
+    const temp = extractJarEntries(jar, birchAssetEntries);
+    try {
+        for (const entry of birchAssetEntries) {
+            const src = join(temp, ...entry.split("/"));
+            const relative = entry
+                .replace(/^assets\/minecraft\//, "")
+                .replaceAll("birch_", "rubber_")
+                .replaceAll("/birch", "/rubber");
+            const dest = join(assetsRoot, relative);
+            writeText(dest, remapBirchWoodText(readFileSync(src, "utf8")));
+        }
+    } finally {
+        rmSync(temp, { recursive: true, force: true });
+    }
 
     writeJson(join(assetsRoot, "blockstates", "rubber_log.json"), {
         variants: logBlockstateVariants("rubber_log"),
     });
-
     writeJson(join(assetsRoot, "blockstates", "stripped_rubber_log.json"), {
         variants: logBlockstateVariants("stripped_rubber_log"),
     });
-
     writeJson(join(assetsRoot, "blockstates", "stripped_rubber_wood.json"), {
         variants: woodBlockstateVariants("stripped_rubber_wood"),
     });
-
     writeJson(join(assetsRoot, "blockstates", "rubber_planks.json"), {
-        variants: {
-            "": {
-                model: `${MOD_ID}:block/rubber_planks`,
-            },
-        },
+        variants: { "": { model: `${MOD_ID}:block/rubber_planks` } },
     });
-
     writeJson(join(assetsRoot, "blockstates", "rubber_slab.json"), {
         variants: {
-            "type=bottom": {
-                model: `${MOD_ID}:block/rubber_slab`,
-            },
-            "type=double": {
-                model: `${MOD_ID}:block/rubber_planks`,
-            },
-            "type=top": {
-                model: `${MOD_ID}:block/rubber_slab_top`,
-            },
+            "type=bottom": { model: `${MOD_ID}:block/rubber_slab` },
+            "type=double": { model: `${MOD_ID}:block/rubber_planks` },
+            "type=top": { model: `${MOD_ID}:block/rubber_slab_top` },
         },
     });
 
     writeLogModels(assetsRoot, "rubber_log", "rubber_log");
     writeLogModels(assetsRoot, "stripped_rubber_log", "rubber_stripped_log");
     writeWoodBlockModel(assetsRoot, "stripped_rubber_wood", "rubber_stripped_log");
+    writeWoodBlockModel(assetsRoot, "rubber_wood", "rubber_log");
 
     writeJson(join(assetsRoot, "models", "block", "rubber_planks.json"), {
         parent: "minecraft:block/cube_all",
-        textures: {
-            all: `${MOD_ID}:block/rubber_planks`,
-        },
+        textures: { all: `${MOD_ID}:block/rubber_planks` },
     });
 
     const slabTextures = {
@@ -471,114 +580,215 @@ function writeWoodAssets() {
         textures: slabTextures,
     });
 
-    for (const itemName of ["rubber_log", "stripped_rubber_log", "stripped_rubber_wood", "rubber_planks", "rubber_slab"]) {
+    for (const itemName of [
+        "rubber_log",
+        "stripped_rubber_log",
+        "rubber_wood",
+        "stripped_rubber_wood",
+        "rubber_planks",
+        "rubber_slab",
+    ]) {
         writeJson(join(assetsRoot, "models", "item", `${itemName}.json`), {
             parent: `${MOD_ID}:block/${itemName}`,
         });
     }
 }
 
-function writeWoodLootTables() {
-    for (const blockName of ["rubber_log", "stripped_rubber_log", "stripped_rubber_wood", "rubber_planks"]) {
-        writeJson(out("data", MOD_ID, "loot_table", "blocks", `${blockName}.json`), {
-            type: "minecraft:block",
-            pools: [
-                {
-                    bonus_rolls: 0.0,
-                    conditions: [
-                        {
-                            condition: "minecraft:survives_explosion",
-                        },
-                    ],
-                    entries: [
-                        {
-                            type: "minecraft:item",
-                            name: `${MOD_ID}:${blockName}`,
-                        },
-                    ],
-                    rolls: 1.0,
-                },
-            ],
-            random_sequence: `${MOD_ID}:blocks/${blockName}`,
-        });
-    }
-
-    writeJson(out("data", MOD_ID, "loot_table", "blocks", "rubber_slab.json"), {
+function writeSimpleBlockLoot(blockName) {
+    writeJson(out("data", MOD_ID, "loot_table", "blocks", `${blockName}.json`), {
         type: "minecraft:block",
         pools: [
             {
                 bonus_rolls: 0.0,
-                conditions: [
-                    {
-                        condition: "minecraft:survives_explosion",
-                    },
-                ],
-                entries: [
-                    {
-                        type: "minecraft:item",
-                        functions: [
-                            {
-                                add: false,
-                                conditions: [
-                                    {
-                                        block: `${MOD_ID}:rubber_slab`,
-                                        condition: "minecraft:block_state_property",
-                                        properties: {
-                                            type: "double",
-                                        },
-                                    },
-                                ],
-                                count: 2.0,
-                                function: "minecraft:set_count",
-                            },
-                            {
-                                function: "minecraft:explosion_decay",
-                            },
-                        ],
-                        name: `${MOD_ID}:rubber_slab`,
-                    },
-                ],
+                conditions: [{ condition: "minecraft:survives_explosion" }],
+                entries: [{ type: "minecraft:item", name: `${MOD_ID}:${blockName}` }],
                 rolls: 1.0,
             },
         ],
-        random_sequence: `${MOD_ID}:blocks/rubber_slab`,
+        random_sequence: `${MOD_ID}:blocks/${blockName}`,
     });
 }
 
+function writeWoodLootTables() {
+    const jar = findMinecraftResourcesJar();
+    const specialLoot = [
+        ["birch_slab", "rubber_slab"],
+        ["birch_door", "rubber_door"],
+        ["birch_sign", "rubber_sign"],
+        ["birch_hanging_sign", "rubber_hanging_sign"],
+    ];
+
+    for (const blockName of [
+        "rubber_log",
+        "stripped_rubber_log",
+        "rubber_wood",
+        "stripped_rubber_wood",
+        "rubber_planks",
+        "rubber_stairs",
+        "rubber_fence",
+        "rubber_fence_gate",
+        "rubber_trapdoor",
+        "rubber_button",
+        "rubber_pressure_plate",
+    ]) {
+        writeSimpleBlockLoot(blockName);
+    }
+
+    if (!jar) {
+        throw new Error("Missing Minecraft client-extra jar for wood loot tables.");
+    }
+
+    const entries = specialLoot.map(([from]) => `data/minecraft/loot_table/blocks/${from}.json`);
+    const temp = extractJarEntries(jar, entries);
+    try {
+        for (const [from, to] of specialLoot) {
+            const src = join(temp, "data", "minecraft", "loot_table", "blocks", `${from}.json`);
+            const text = readFileSync(src, "utf8")
+                .replaceAll(`minecraft:${from}`, `${MOD_ID}:${to}`)
+                .replaceAll(`"minecraft:blocks/${from}"`, `"${MOD_ID}:blocks/${to}"`)
+                .replaceAll("birch_", "rubber_");
+            writeText(out("data", MOD_ID, "loot_table", "blocks", `${to}.json`), text);
+        }
+    } finally {
+        rmSync(temp, { recursive: true, force: true });
+    }
+}
+
 function writeWoodTags() {
+    const rubberWood = `${MOD_ID}:rubber_wood`;
     const strippedWood = `${MOD_ID}:stripped_rubber_wood`;
-    const logItems = [`${MOD_ID}:rubber_log`, `${MOD_ID}:stripped_rubber_log`, strippedWood];
-    const logBlocks = logItems;
+    const logItems = [
+        `${MOD_ID}:rubber_log`,
+        `${MOD_ID}:stripped_rubber_log`,
+        rubberWood,
+        strippedWood,
+    ];
     const planks = [`${MOD_ID}:rubber_planks`];
     const slab = [`${MOD_ID}:rubber_slab`];
-    const rubberLog = [`${MOD_ID}:rubber_log`];
-    const strippedLog = [`${MOD_ID}:stripped_rubber_log`];
-    const strippedWoods = [strippedWood];
+    const stairs = [`${MOD_ID}:rubber_stairs`];
+    const fence = [`${MOD_ID}:rubber_fence`];
+    const fenceGate = [`${MOD_ID}:rubber_fence_gate`];
+    const door = [`${MOD_ID}:rubber_door`];
+    const trapdoor = [`${MOD_ID}:rubber_trapdoor`];
+    const button = [`${MOD_ID}:rubber_button`];
+    const pressurePlate = [`${MOD_ID}:rubber_pressure_plate`];
+    const sign = [`${MOD_ID}:rubber_sign`];
+    const hangingSign = [`${MOD_ID}:rubber_hanging_sign`];
+    const boat = [`${MOD_ID}:rubber_boat`];
+    const chestBoat = [`${MOD_ID}:rubber_chest_boat`];
+    const axeMineable = logItems.concat(
+        planks,
+        slab,
+        stairs,
+        fence,
+        fenceGate,
+        door,
+        trapdoor,
+        button,
+        pressurePlate,
+        sign,
+        hangingSign,
+        [`${MOD_ID}:rubber_wall_sign`, `${MOD_ID}:rubber_wall_hanging_sign`],
+    );
 
     writeTag(MOD_ID, "item", "rubber_logs", logItems);
-    writeTag(MOD_ID, "block", "rubber_logs", logBlocks);
-    writeTag("minecraft", "block", "logs", logBlocks);
-    writeTag("minecraft", "block", "logs_that_burn", logBlocks);
-    writeTag("minecraft", "block", "mineable/axe", logBlocks.concat(planks, slab));
+    writeTag(MOD_ID, "block", "rubber_logs", logItems);
+    writeTag("minecraft", "block", "logs", logItems);
+    writeTag("minecraft", "block", "logs_that_burn", logItems);
+    writeTag("minecraft", "block", "mineable/axe", axeMineable);
     writeTag("minecraft", "block", "planks", planks);
     writeTag("minecraft", "block", "slabs", slab);
     writeTag("minecraft", "block", "wooden_slabs", slab);
+    writeTag("minecraft", "block", "stairs", stairs);
+    writeTag("minecraft", "block", "wooden_stairs", stairs);
+    writeTag("minecraft", "block", "fences", fence);
+    writeTag("minecraft", "block", "wooden_fences", fence);
+    writeTag("minecraft", "block", "fence_gates", fenceGate);
+    writeTag("minecraft", "block", "doors", door);
+    writeTag("minecraft", "block", "wooden_doors", door);
+    writeTag("minecraft", "block", "trapdoors", trapdoor);
+    writeTag("minecraft", "block", "wooden_trapdoors", trapdoor);
+    writeTag("minecraft", "block", "buttons", button);
+    writeTag("minecraft", "block", "wooden_buttons", button);
+    writeTag("minecraft", "block", "pressure_plates", pressurePlate);
+    writeTag("minecraft", "block", "wooden_pressure_plates", pressurePlate);
+    writeTag("minecraft", "block", "standing_signs", sign);
+    writeTag("minecraft", "block", "wall_signs", [`${MOD_ID}:rubber_wall_sign`]);
+    writeTag("minecraft", "block", "ceiling_hanging_signs", hangingSign);
+    writeTag("minecraft", "block", "wall_hanging_signs", [`${MOD_ID}:rubber_wall_hanging_sign`]);
     writeTag("minecraft", "item", "logs", logItems);
     writeTag("minecraft", "item", "logs_that_burn", logItems);
     writeTag("minecraft", "item", "planks", planks);
     writeTag("minecraft", "item", "slabs", slab);
     writeTag("minecraft", "item", "wooden_slabs", slab);
-    writeTag("c", "block", "logs", rubberLog);
-    writeTag("c", "item", "logs", rubberLog);
-    writeTag("c", "block", "stripped_logs", strippedLog);
-    writeTag("c", "item", "stripped_logs", strippedLog);
-    writeTag("c", "block", "stripped_woods", strippedWoods);
-    writeTag("c", "item", "stripped_woods", strippedWoods);
+    writeTag("minecraft", "item", "stairs", stairs);
+    writeTag("minecraft", "item", "wooden_stairs", stairs);
+    writeTag("minecraft", "item", "fences", fence);
+    writeTag("minecraft", "item", "wooden_fences", fence);
+    writeTag("minecraft", "item", "fence_gates", fenceGate);
+    writeTag("minecraft", "item", "doors", door);
+    writeTag("minecraft", "item", "wooden_doors", door);
+    writeTag("minecraft", "item", "trapdoors", trapdoor);
+    writeTag("minecraft", "item", "wooden_trapdoors", trapdoor);
+    writeTag("minecraft", "item", "buttons", button);
+    writeTag("minecraft", "item", "wooden_buttons", button);
+    writeTag("minecraft", "item", "wooden_pressure_plates", pressurePlate);
+    writeTag("minecraft", "item", "signs", sign);
+    writeTag("minecraft", "item", "hanging_signs", hangingSign);
+    writeTag("minecraft", "item", "boats", boat);
+    writeTag("minecraft", "item", "chest_boats", chestBoat);
+    writeTag("c", "block", "logs", [`${MOD_ID}:rubber_log`]);
+    writeTag("c", "item", "logs", [`${MOD_ID}:rubber_log`]);
+    writeTag("c", "block", "stripped_logs", [`${MOD_ID}:stripped_rubber_log`]);
+    writeTag("c", "item", "stripped_logs", [`${MOD_ID}:stripped_rubber_log`]);
+    writeTag("c", "block", "stripped_woods", [strippedWood]);
+    writeTag("c", "item", "stripped_woods", [strippedWood]);
     writeTag("c", "block", "planks", planks);
     writeTag("c", "item", "planks", planks);
 }
 
 function writeWoodRecipes() {
+    const jar = findMinecraftResourcesJar();
+    if (!jar) {
+        throw new Error("Missing Minecraft client-extra jar for wood recipes.");
+    }
+
+    const recipeMap = [
+        ["birch_wood", "rubber_wood"],
+        ["stripped_birch_wood", "stripped_rubber_wood"],
+        ["birch_stairs", "rubber_stairs"],
+        ["birch_slab", "rubber_slab"],
+        ["birch_fence", "rubber_fence"],
+        ["birch_fence_gate", "rubber_fence_gate"],
+        ["birch_door", "rubber_door"],
+        ["birch_trapdoor", "rubber_trapdoor"],
+        ["birch_button", "rubber_button"],
+        ["birch_pressure_plate", "rubber_pressure_plate"],
+        ["birch_sign", "rubber_sign"],
+        ["birch_hanging_sign", "rubber_hanging_sign"],
+        ["birch_boat", "rubber_boat"],
+        ["birch_chest_boat", "rubber_chest_boat"],
+    ];
+
+    const entries = recipeMap.map(([from]) => `data/minecraft/recipe/${from}.json`);
+    const temp = extractJarEntries(jar, entries);
+    try {
+        for (const [from, to] of recipeMap) {
+            const src = join(temp, "data", "minecraft", "recipe", `${from}.json`);
+            let text = readFileSync(src, "utf8")
+                .replaceAll("minecraft:birch_planks", `${MOD_ID}:rubber_planks`)
+                .replaceAll("minecraft:birch_log", `${MOD_ID}:rubber_log`)
+                .replaceAll("minecraft:stripped_birch_log", `${MOD_ID}:stripped_rubber_log`)
+                .replaceAll("minecraft:birch_boat", `${MOD_ID}:rubber_boat`)
+                .replaceAll(`minecraft:${from}`, `${MOD_ID}:${to}`)
+                .replaceAll('"birch_logs"', `"${MOD_ID}:rubber_logs"`)
+                .replaceAll("minecraft:birch_logs", `${MOD_ID}:rubber_logs`);
+            writeText(out("data", MOD_ID, "recipe", `${to}.json`), text);
+        }
+    } finally {
+        rmSync(temp, { recursive: true, force: true });
+    }
+
     writeJson(out("data", MOD_ID, "recipe", "rubber_planks.json"), {
         type: "minecraft:crafting_shapeless",
         category: "building",
@@ -587,34 +797,6 @@ function writeWoodRecipes() {
         result: {
             count: 4,
             id: `${MOD_ID}:rubber_planks`,
-        },
-    });
-
-    writeJson(out("data", MOD_ID, "recipe", "stripped_rubber_wood.json"), {
-        type: "minecraft:crafting_shaped",
-        category: "building",
-        group: "bark",
-        key: {
-            "#": { item: `${MOD_ID}:stripped_rubber_log` },
-        },
-        pattern: ["##", "##"],
-        result: {
-            count: 3,
-            id: `${MOD_ID}:stripped_rubber_wood`,
-        },
-    });
-
-    writeJson(out("data", MOD_ID, "recipe", "rubber_slab.json"), {
-        type: "minecraft:crafting_shaped",
-        category: "building",
-        group: "wooden_slab",
-        key: {
-            "#": { item: `${MOD_ID}:rubber_planks` },
-        },
-        pattern: ["###"],
-        result: {
-            count: 6,
-            id: `${MOD_ID}:rubber_slab`,
         },
     });
 }
@@ -1277,12 +1459,26 @@ function writeLang() {
         [`block.${MOD_ID}.stripped_${SPECIES}_branch`]: "Stripped Rubber Branch",
         [`block.${MOD_ID}.rubber_log`]: "Rubber Log",
         [`block.${MOD_ID}.stripped_rubber_log`]: "Stripped Rubber Log",
+        [`block.${MOD_ID}.rubber_wood`]: "Rubber Wood",
         [`block.${MOD_ID}.stripped_rubber_wood`]: "Stripped Rubber Wood",
         [`block.${MOD_ID}.rubber_planks`]: "Rubber Planks",
         [`block.${MOD_ID}.rubber_slab`]: "Rubber Slab",
+        [`block.${MOD_ID}.rubber_stairs`]: "Rubber Stairs",
+        [`block.${MOD_ID}.rubber_fence`]: "Rubber Fence",
+        [`block.${MOD_ID}.rubber_fence_gate`]: "Rubber Fence Gate",
+        [`block.${MOD_ID}.rubber_door`]: "Rubber Door",
+        [`block.${MOD_ID}.rubber_trapdoor`]: "Rubber Trapdoor",
+        [`block.${MOD_ID}.rubber_button`]: "Rubber Button",
+        [`block.${MOD_ID}.rubber_pressure_plate`]: "Rubber Pressure Plate",
+        [`block.${MOD_ID}.rubber_sign`]: "Rubber Sign",
+        [`block.${MOD_ID}.rubber_wall_sign`]: "Rubber Wall Sign",
+        [`block.${MOD_ID}.rubber_hanging_sign`]: "Rubber Hanging Sign",
+        [`block.${MOD_ID}.rubber_wall_hanging_sign`]: "Rubber Wall Hanging Sign",
         [`block.${MOD_ID}.${SPECIES}_leaves`]: "Rubber Leaves",
         [`block.${MOD_ID}.${SPECIES}_sapling`]: "Rubber Sapling",
         [`item.${MOD_ID}.${SPECIES}_seed`]: "Rubber Seed",
+        [`item.${MOD_ID}.rubber_boat`]: "Rubber Boat",
+        [`item.${MOD_ID}.rubber_chest_boat`]: "Rubber Boat with Chest",
         [`item.${MOD_ID}.raw_latex`]: "Raw Latex",
         [`item.${MOD_ID}.coagulated_latex`]: "Coagulated Latex",
         [`item.${MOD_ID}.rubber_ball`]: "Rubber Ball",
@@ -1298,6 +1494,23 @@ function writePackMeta() {
             description: "SKCraft Dynamic Trees rubber species",
             pack_format: 34,
         },
+    });
+}
+
+function writeEnumExtensions() {
+    writeJson(out("META-INF", "enumextensions.json"), {
+        entries: [
+            {
+                enum: "net/minecraft/world/entity/vehicle/Boat$Type",
+                name: "DTRUBBER_RUBBER",
+                constructor:
+                    "(Ljava/util/function/Supplier;Ljava/lang/String;Ljava/util/function/Supplier;Ljava/util/function/Supplier;Ljava/util/function/Supplier;Z)V",
+                parameters: {
+                    class: "com/skcraft/dtrubber/DtRubber",
+                    method: "getBoatTypeParameter",
+                },
+            },
+        ],
     });
 }
 
@@ -1326,5 +1539,6 @@ writeRubberTagsAndRecipes();
 writeAssets();
 writeLang();
 writePackMeta();
+writeEnumExtensions();
 
 console.log("Generated dtrubber resources.");

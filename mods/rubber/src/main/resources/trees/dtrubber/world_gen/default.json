@@ -72,7 +72,6 @@
     }
   },
   {
-    "only_if_loaded": "regions_unexplored",
     "select": {
       "name": "regions_unexplored:rainforest"
     },
@@ -84,10 +83,10 @@
           "...": 47
         }
       }
-    }
+    },
+    "only_if_loaded": "regions_unexplored"
   },
   {
-    "only_if_loaded": "regions_unexplored",
     "select": {
       "name": "regions_unexplored:sparse_rainforest"
     },
@@ -99,10 +98,10 @@
           "...": 47
         }
       }
-    }
+    },
+    "only_if_loaded": "regions_unexplored"
   },
   {
-    "only_if_loaded": "regions_unexplored",
     "select": {
       "name": "regions_unexplored:marsh"
     },
@@ -114,10 +113,10 @@
           "...": 49
         }
       }
-    }
+    },
+    "only_if_loaded": "regions_unexplored"
   },
   {
-    "only_if_loaded": "regions_unexplored",
     "select": {
       "name": "regions_unexplored:eucalyptus_forest"
     },
@@ -129,10 +128,10 @@
           "...": 48
         }
       }
-    }
+    },
+    "only_if_loaded": "regions_unexplored"
   },
   {
-    "only_if_loaded": "regions_unexplored",
     "select": {
       "name": "regions_unexplored:bamboo_forest"
     },
@@ -144,10 +143,10 @@
           "...": 48
         }
       }
-    }
+    },
+    "only_if_loaded": "regions_unexplored"
   },
   {
-    "only_if_loaded": "regions_unexplored",
     "select": {
       "name": "regions_unexplored:tropics"
     },
@@ -159,10 +158,10 @@
           "...": 48
         }
       }
-    }
+    },
+    "only_if_loaded": "regions_unexplored"
   },
   {
-    "only_if_loaded": "regions_unexplored",
     "select": {
       "name": "regions_unexplored:bayou"
     },
@@ -174,10 +173,10 @@
           "...": 49
         }
       }
-    }
+    },
+    "only_if_loaded": "regions_unexplored"
   },
   {
-    "only_if_loaded": "regions_unexplored",
     "select": {
       "name": "regions_unexplored:old_growth_bayou"
     },
@@ -189,10 +188,10 @@
           "...": 49
         }
       }
-    }
+    },
+    "only_if_loaded": "regions_unexplored"
   },
   {
-    "only_if_loaded": "natures_spirit",
     "select": {
       "name": "natures_spirit:tropical_woods"
     },
@@ -204,10 +203,10 @@
           "...": 47
         }
       }
-    }
+    },
+    "only_if_loaded": "natures_spirit"
   },
   {
-    "only_if_loaded": "natures_spirit",
     "select": {
       "name": "natures_spirit:tropical_basin"
     },
@@ -219,10 +218,10 @@
           "...": 47
         }
       }
-    }
+    },
+    "only_if_loaded": "natures_spirit"
   },
   {
-    "only_if_loaded": "natures_spirit",
     "select": {
       "name": "natures_spirit:sparse_tropical_woods"
     },
@@ -234,10 +233,10 @@
           "...": 47
         }
       }
-    }
+    },
+    "only_if_loaded": "natures_spirit"
   },
   {
-    "only_if_loaded": "natures_spirit",
     "select": {
       "name": "natures_spirit:marsh"
     },
@@ -249,10 +248,10 @@
           "...": 49
         }
       }
-    }
+    },
+    "only_if_loaded": "natures_spirit"
   },
   {
-    "only_if_loaded": "natures_spirit",
     "select": {
       "name": "natures_spirit:bamboo_wetlands"
     },
@@ -264,10 +263,10 @@
           "...": 48
         }
       }
-    }
+    },
+    "only_if_loaded": "natures_spirit"
   },
   {
-    "only_if_loaded": "natures_spirit",
     "select": {
       "name": "natures_spirit:tropical_shores"
     },
@@ -279,10 +278,10 @@
           "...": 49
         }
       }
-    }
+    },
+    "only_if_loaded": "natures_spirit"
   },
   {
-    "only_if_loaded": "biomesoplenty",
     "select": {
       "name": "biomesoplenty:.*",
       "tag": "#minecraft:is_jungle"
@@ -295,10 +294,10 @@
           "...": 48
         }
       }
-    }
+    },
+    "only_if_loaded": "biomesoplenty"
   },
   {
-    "only_if_loaded": "biomesoplenty",
     "select": {
       "name": "biomesoplenty:tropics"
     },
@@ -310,10 +309,10 @@
           "...": 48
         }
       }
-    }
+    },
+    "only_if_loaded": "biomesoplenty"
   },
   {
-    "only_if_loaded": "biomesoplenty",
     "select": {
       "name": "biomesoplenty:marsh"
     },
@@ -325,10 +324,10 @@
           "...": 49
         }
       }
-    }
+    },
+    "only_if_loaded": "biomesoplenty"
   },
   {
-    "only_if_loaded": "biomesoplenty",
     "select": {
       "name": "biomesoplenty:wetland"
     },
@@ -340,10 +339,10 @@
           "...": 49
         }
       }
-    }
+    },
+    "only_if_loaded": "biomesoplenty"
   },
   {
-    "only_if_loaded": "biomesoplenty",
     "select": {
       "name": "biomesoplenty:bayou"
     },
@@ -355,10 +354,10 @@
           "...": 49
         }
       }
-    }
+    },
+    "only_if_loaded": "biomesoplenty"
   },
   {
-    "only_if_loaded": "biomeswevegone",
     "select": {
       "name": "biomeswevegone:.*",
       "tag": "#minecraft:is_jungle"
@@ -371,10 +370,10 @@
           "...": 47
         }
       }
-    }
+    },
+    "only_if_loaded": "biomeswevegone"
   },
   {
-    "only_if_loaded": "biomeswevegone",
     "select": {
       "name": "biomeswevegone:bayou"
     },
@@ -386,10 +385,10 @@
           "...": 49
         }
       }
-    }
+    },
+    "only_if_loaded": "biomeswevegone"
   },
   {
-    "only_if_loaded": "biomeswevegone",
     "select": {
       "name": "biomeswevegone:cypress_swamplands"
     },
@@ -401,10 +400,10 @@
           "...": 49
         }
       }
-    }
+    },
+    "only_if_loaded": "biomeswevegone"
   },
   {
-    "only_if_loaded": "biomeswevegone",
     "select": {
       "name": "biomeswevegone:cypress_wetlands"
     },
@@ -416,10 +415,10 @@
           "...": 49
         }
       }
-    }
+    },
+    "only_if_loaded": "biomeswevegone"
   },
   {
-    "only_if_loaded": "biomeswevegone",
     "select": {
       "name": "biomeswevegone:white_mangrove_marshes"
     },
@@ -431,6 +430,7 @@
           "...": 49
         }
       }
-    }
+    },
+    "only_if_loaded": "biomeswevegone"
   }
 ]

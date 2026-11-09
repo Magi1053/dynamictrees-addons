@@ -24,7 +24,8 @@ import net.neoforged.neoforge.common.util.FakePlayer;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 
 public final class RubberTapHandler {
-    private static final ResourceLocation RUBBER_BRANCH_ID = ResourceLocation.fromNamespaceAndPath(DtRubber.MOD_ID, "rubber_branch");
+    private static final ResourceLocation RUBBER_BRANCH_ID =
+            ResourceLocation.fromNamespaceAndPath(DtRubber.MOD_ID, "rubber_branch");
     private static final int MIN_STRIP_RADIUS = 5;
 
     private RubberTapHandler() {}
@@ -42,99 +43,66 @@ public final class RubberTapHandler {
         }
 
         Player player = event.getEntity();
-        if (!isRealPlayer(player)) {
+        if (!(player instanceof ServerPlayer serverPlayer) || player instanceof FakePlayer || serverPlayer.isSpectator()) {
             return;
         }
 
         BlockPos pos = event.getPos();
-        ServerPlayer serverPlayer = (ServerPlayer) player;
-
-        int radius = tryStripRubberBranch(level, pos, player, stack);
+        int radius = tryStripRubberBranch(level, pos, serverPlayer, stack);
         if (radius >= 0) {
             if (radius >= MIN_STRIP_RADIUS) {
                 dropRawLatex((ServerLevel) level, pos);
             }
-            event.setCanceled(true);
-            event.setCancellationResult(InteractionResult.SUCCESS);
+            succeed(event);
             return;
         }
 
         if (tryStripRubberLog(level, pos, serverPlayer, stack)) {
             dropRawLatex((ServerLevel) level, pos);
-            event.setCanceled(true);
-            event.setCancellationResult(InteractionResult.SUCCESS);
+            succeed(event);
         }
     }
 
-    private static boolean isRealPlayer(Player player) {
-        return player instanceof ServerPlayer serverPlayer
-                && !(player instanceof FakePlayer)
-                && !serverPlayer.isSpectator();
+    private static void succeed(PlayerInteractEvent.RightClickBlock event) {
+        event.setCanceled(true);
+        event.setCancellationResult(InteractionResult.SUCCESS);
     }
 
     private static void dropRawLatex(ServerLevel level, BlockPos pos) {
         int count = level.getRandom().nextInt(3);
-        if (count <= 0) {
-            return;
+        if (count > 0) {
+            Block.popResource(level, pos, new ItemStack(DtRubberItems.RAW_LATEX.get(), count));
         }
-
-        Block.popResource(level, pos, new ItemStack(DtRubberItems.RAW_LATEX.get(), count));
     }
 
-    private static void damageAxe(ItemStack stack, ServerPlayer player) {
-        if (stack.isEmpty() || !stack.isDamageableItem()) {
-            return;
-        }
-
-        EquipmentSlot slot = player.getMainHandItem() == stack ? EquipmentSlot.MAINHAND : EquipmentSlot.OFFHAND;
-        stack.hurtAndBreak(1, player, slot);
-    }
-
-    private static boolean forceStripBranch(
-            Level level,
-            BlockPos pos,
-            BlockState state,
-            ServerPlayer player,
-            ItemStack stack,
-            BranchBlock branch,
-            Family family) {
-        var strippedOpt = family.getStrippedBranch();
-        if (strippedOpt.isEmpty()) {
-            return false;
-        }
-
-        BranchBlock strippedBranch = strippedOpt.get();
-        int radius = branch.getRadius(state);
-        BlockState strippedState = strippedBranch.getStateForRadius(radius);
-        level.setBlock(pos, strippedState, Block.UPDATE_ALL);
-
+    private static void applyStrip(Level level, BlockPos pos, BlockState stripped, ServerPlayer player, ItemStack stack) {
+        level.setBlock(pos, stripped, Block.UPDATE_ALL);
         level.playSound(null, pos, SoundEvents.AXE_STRIP, SoundSource.BLOCKS, 1.0F, 1.0F);
-        damageAxe(stack, player);
-        return true;
+        if (!stack.isEmpty() && stack.isDamageableItem()) {
+            EquipmentSlot slot = player.getMainHandItem() == stack ? EquipmentSlot.MAINHAND : EquipmentSlot.OFFHAND;
+            stack.hurtAndBreak(1, player, slot);
+        }
     }
 
-    private static int tryStripRubberBranch(Level level, BlockPos pos, Player player, ItemStack stack) {
+    private static int tryStripRubberBranch(Level level, BlockPos pos, ServerPlayer player, ItemStack stack) {
         BlockState state = level.getBlockState(pos);
         BranchBlock branch = TreeHelper.getBranch(state);
-        if (branch == null) {
-            return -1;
-        }
-
-        ResourceLocation blockId = BuiltInRegistries.BLOCK.getKey(branch);
-        if (!RUBBER_BRANCH_ID.equals(blockId)) {
+        if (branch == null || !RUBBER_BRANCH_ID.equals(BuiltInRegistries.BLOCK.getKey(branch))) {
             return -1;
         }
 
         int radius = branch.getRadius(state);
         Family family = branch.getFamily(state, level, pos);
-        boolean stripped = false;
+        boolean stripped = family.canStripBranch(state, level, pos, player, stack)
+                && family.stripBranch(state, level, pos, player, stack);
 
-        if (family.canStripBranch(state, level, pos, player, stack)) {
-            stripped = family.stripBranch(state, level, pos, player, stack);
-        }
-
-        if (!stripped && player instanceof ServerPlayer serverPlayer) {
-            stripped = forceStripBranch(level, pos, state, serverPlayer, stack, branch, family);
+        if (!stripped) {
+            var strippedOpt = family.getStrippedBranch();
+            if (strippedOpt.isEmpty()) {
+                return -1;
+            }
+            applyStrip(level, pos, strippedOpt.get().getStateForRadius(radius), player, stack);
+            stripped = true;
         }
 
         return stripped ? radius : -1;
@@ -146,12 +114,15 @@ public final class RubberTapHandler {
             return false;
         }
 
-        BlockState strippedState = DtRubberBlocks.STRIPPED_RUBBER_LOG.get()
-                .defaultBlockState()
-                .setValue(BlockStateProperties.AXIS, state.getValue(BlockStateProperties.AXIS));
-        level.setBlock(pos, strippedState, Block.UPDATE_ALL);
-        level.playSound(null, pos, SoundEvents.AXE_STRIP, SoundSource.BLOCKS, 1.0F, 1.0F);
-        damageAxe(stack, player);
+        applyStrip(
+                level,
+                pos,
+                DtRubberBlocks.STRIPPED_RUBBER_LOG.get()
+                        .defaultBlockState()
+                        .setValue(BlockStateProperties.AXIS, state.getValue(BlockStateProperties.AXIS)),
+                player,
+                stack
+        );
         return true;
     }
 }

@@ -7,13 +7,18 @@ import javax.imageio.ImageIO;
 
 /** Replaces the former Pillow scripts: retint wood + copy/recolor latex item icons. */
 public class GenerateTextures {
+    private static final String MC_ASSETS =
+            "https://raw.githubusercontent.com/InventivetalentDev/minecraft-assets/1.21.1/assets/minecraft/textures/";
+
     private static Path blockDir;
     private static Path itemDir;
+    private static Path entityDir;
 
     public static void main(String[] args) throws Exception {
         Path root = args.length > 0 ? Path.of(args[0]).toAbsolutePath() : Path.of("").toAbsolutePath();
         blockDir = root.resolve("bundled_assets/textures/block");
         itemDir = root.resolve("bundled_assets/textures/item");
+        entityDir = root.resolve("bundled_assets/textures/entity");
         ImageIO.setUseCache(false);
         generateWood();
         generateLatexItems();
@@ -21,12 +26,25 @@ public class GenerateTextures {
 
     private static void generateWood() throws Exception {
         Files.createDirectories(blockDir);
-        fetchIfMissing(
-            blockDir.resolve("_src_birch_planks.png"),
-            "https://raw.githubusercontent.com/InventivetalentDev/minecraft-assets/1.21.1/assets/minecraft/textures/block/birch_planks.png");
-        fetchIfMissing(
-            blockDir.resolve("_src_stripped_jungle_log.png"),
-            "https://raw.githubusercontent.com/InventivetalentDev/minecraft-assets/1.21.1/assets/minecraft/textures/block/stripped_jungle_log.png");
+        Files.createDirectories(itemDir);
+        Files.createDirectories(entityDir.resolve("signs/hanging"));
+        Files.createDirectories(entityDir.resolve("boat"));
+        Files.createDirectories(entityDir.resolve("chest_boat"));
+
+        fetchIfMissing(blockDir.resolve("_src_birch_planks.png"), MC_ASSETS + "block/birch_planks.png");
+        fetchIfMissing(blockDir.resolve("_src_stripped_jungle_log.png"), MC_ASSETS + "block/stripped_jungle_log.png");
+        fetchIfMissing(blockDir.resolve("_src_birch_door_bottom.png"), MC_ASSETS + "block/birch_door_bottom.png");
+        fetchIfMissing(blockDir.resolve("_src_birch_door_top.png"), MC_ASSETS + "block/birch_door_top.png");
+        fetchIfMissing(blockDir.resolve("_src_birch_trapdoor.png"), MC_ASSETS + "block/birch_trapdoor.png");
+        fetchIfMissing(itemDir.resolve("_src_birch_door.png"), MC_ASSETS + "item/birch_door.png");
+        fetchIfMissing(itemDir.resolve("_src_birch_sign.png"), MC_ASSETS + "item/birch_sign.png");
+        fetchIfMissing(itemDir.resolve("_src_birch_hanging_sign.png"), MC_ASSETS + "item/birch_hanging_sign.png");
+        fetchIfMissing(itemDir.resolve("_src_birch_boat.png"), MC_ASSETS + "item/birch_boat.png");
+        fetchIfMissing(itemDir.resolve("_src_birch_chest_boat.png"), MC_ASSETS + "item/birch_chest_boat.png");
+        fetchIfMissing(entityDir.resolve("_src_birch_sign.png"), MC_ASSETS + "entity/signs/birch.png");
+        fetchIfMissing(entityDir.resolve("_src_birch_hanging_sign.png"), MC_ASSETS + "entity/signs/hanging/birch.png");
+        fetchIfMissing(entityDir.resolve("_src_birch_boat.png"), MC_ASSETS + "entity/boat/birch.png");
+        fetchIfMissing(entityDir.resolve("_src_birch_chest_boat.png"), MC_ASSETS + "entity/chest_boat/birch.png");
 
         Path top = blockDir.resolve("rubber_log_top.png");
         Path log = blockDir.resolve("rubber_log.png");
@@ -39,6 +57,18 @@ public class GenerateTextures {
 
         tintImage(blockDir.resolve("_src_stripped_jungle_log.png"), blockDir.resolve("rubber_stripped_log.png"), top, 0.55);
         tintImage(blockDir.resolve("_src_birch_planks.png"), blockDir.resolve("rubber_planks.png"), top, 0.35);
+        tintImage(blockDir.resolve("_src_birch_door_bottom.png"), blockDir.resolve("rubber_door_bottom.png"), top, 0.35);
+        tintImage(blockDir.resolve("_src_birch_door_top.png"), blockDir.resolve("rubber_door_top.png"), top, 0.35);
+        tintImage(blockDir.resolve("_src_birch_trapdoor.png"), blockDir.resolve("rubber_trapdoor.png"), top, 0.35);
+        tintImage(itemDir.resolve("_src_birch_door.png"), itemDir.resolve("rubber_door.png"), top, 0.35);
+        tintImage(itemDir.resolve("_src_birch_sign.png"), itemDir.resolve("rubber_sign.png"), top, 0.35);
+        tintImage(itemDir.resolve("_src_birch_hanging_sign.png"), itemDir.resolve("rubber_hanging_sign.png"), top, 0.35);
+        tintImage(itemDir.resolve("_src_birch_boat.png"), itemDir.resolve("rubber_boat.png"), top, 0.35);
+        tintImage(itemDir.resolve("_src_birch_chest_boat.png"), itemDir.resolve("rubber_chest_boat.png"), top, 0.35);
+        tintImage(entityDir.resolve("_src_birch_sign.png"), entityDir.resolve("signs/rubber.png"), top, 0.35);
+        tintImage(entityDir.resolve("_src_birch_hanging_sign.png"), entityDir.resolve("signs/hanging/rubber.png"), top, 0.35);
+        tintImage(entityDir.resolve("_src_birch_boat.png"), entityDir.resolve("boat/rubber.png"), top, 0.35);
+        tintImage(entityDir.resolve("_src_birch_chest_boat.png"), entityDir.resolve("chest_boat/rubber.png"), top, 0.35);
         ImageIO.write(readRgba(top), "png", blockDir.resolve("rubber_log_top_thick.png").toFile());
     }
 
@@ -78,6 +108,7 @@ public class GenerateTextures {
         if (Files.isRegularFile(dest)) {
             return;
         }
+        Files.createDirectories(dest.getParent());
         try (InputStream in = URI.create(url).toURL().openStream()) {
             Files.copy(in, dest);
         }
@@ -162,6 +193,7 @@ public class GenerateTextures {
                 out.setRGB(x, y, (alpha << 24) | (nr << 16) | (ng << 8) | nb);
             }
         }
+        Files.createDirectories(target.getParent());
         ImageIO.write(out, "png", target.toFile());
         System.out.printf(
             "Wrote %s (src %.1f,%.1f,%.1f -> ref %.1f,%.1f,%.1f, green_pull=%s)%n",

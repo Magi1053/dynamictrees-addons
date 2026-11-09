@@ -11,6 +11,7 @@ authors="${mod_authors}"
 description='''${mod_description}'''
 displayURL="${mod_homepage}"
 logoFile="assets/${mod_id}/logo.png"
+enumExtensions="META-INF/enumextensions.json"
 
 [[dependencies.${mod_id}]]
 modId="neoforge"
@@ -39,6 +40,25 @@ type="optional"
 versionRange="[1.0.0,)"
 ordering="NONE"
 side="CLIENT"
+
+# Optional: Quark + Every Compat (+ Moonlight) can generate rubber chests from this wood set.
+[[dependencies.${mod_id}]]
+modId="moonlight"
+type="optional"
+ordering="AFTER"
+side="BOTH"
+
+[[dependencies.${mod_id}]]
+modId="everycomp"
+type="optional"
+ordering="AFTER"
+side="BOTH"
+
+[[dependencies.${mod_id}]]
+modId="quark"
+type="optional"
+ordering="AFTER"
+side="BOTH"
 
 [[dependencies.${mod_id}]]
 modId="create"
@@ -72,36 +92,6 @@ side="BOTH"
 
 [[dependencies.${mod_id}]]
 modId="petrolsparts"
-type="optional"
-ordering="AFTER"
-side="BOTH"
-
-[[dependencies.${mod_id}]]
-modId="dtru"
-type="optional"
-ordering="AFTER"
-side="BOTH"
-
-[[dependencies.${mod_id}]]
-modId="dtbop"
-type="optional"
-ordering="AFTER"
-side="BOTH"
-
-[[dependencies.${mod_id}]]
-modId="dtnatures_spirit"
-type="optional"
-ordering="AFTER"
-side="BOTH"
-
-[[dependencies.${mod_id}]]
-modId="dtbwg"
-type="optional"
-ordering="AFTER"
-side="BOTH"
-
-[[dependencies.${mod_id}]]
-modId="dtquark"
 type="optional"
 ordering="AFTER"
 side="BOTH"

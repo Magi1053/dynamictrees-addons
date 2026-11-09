@@ -9,6 +9,20 @@ run/
 # Local compile jars
 libs/
 
+# Optional texture workspace (regenerable via node build.mjs; jar uses src/main/resources)
+**/bundled_assets/
+
+# Local in-game probe harnesses / log dumps (not used by Gradle jar builds)
+**/tests/in-game/
+
+# Agent / local scratch (not part of the published addons)
+.tmp/
+artifacts/
+data/
+gates/
+GATES.md
+PLAN.md
+
 # JVM / Gradle noise
 *.log
 hs_err_pid*

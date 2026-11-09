@@ -1,22 +1,16 @@
 # Dynamic Trees Rubber
 
-A dedicated **rubber tree** for Dynamic Trees, plus early-game latex and rubber crafting. Tap growing rubber branches for latex, process it, and craft rubber sheets and throwable rubber balls.
+A Dynamic Trees rubber species with latex tapping and early-game rubber crafting.
 
 ## Features
 
-- Dynamic Trees rubber species with growing branches and seeds
-- Latex tapping on rubber branches
-- Early progression items: raw latex, coagulated latex, rubber sheets, and rubber balls
-- Rubber wood set: logs, stripped variants, planks, leaves, and saplings
-- Optional compatibility hooks when Create, TFMG, and related rubber consumers are present
-- Soft optional ties to other Dynamic Trees wood packs for worldgen-friendly placement
+- Growing rubber branches, seeds, leaves, and saplings
+- Axe-tap latex from thick rubber trunks / branches
+- Items: raw latex, coagulated latex, rubber balls, and rubber sheets (when TFMG is absent)
+- Full vanilla wood set (logs, wood, planks, stairs, slabs, fences, doors, trapdoors, buttons, plates, signs, boats)
+- Optional recipe hooks for Create, TFMG, and related rubber consumers
 
-## Progression snapshot
-
-1. Find or plant a rubber tree (Dynamic Trees seed / sapling flow)
-2. Tap rubber branches for **Raw Latex**
-3. Process latex into **Coagulated Latex**
-4. Craft **Rubber Sheets**, **Rubber Balls**, and related materials for tech / Create-adjacent recipes
+This mod does not ship chest blocks. With Quark + Every Compat (and Moonlight), rubber chests can generate from the wood set when those mods are installed.
 
 ## Requirements
 
@@ -25,13 +19,6 @@ A dedicated **rubber tree** for Dynamic Trees, plus early-game latex and rubber 
 | Minecraft 1.21.1 | Yes |
 | NeoForge | Yes |
 | [Dynamic Trees](https://modrinth.com/mod/dynamictrees) | Yes |
-| Create / TFMG / other rubber mods | Optional (extra recipe & compat hooks) |
-
-## Notes
-
-- Self-contained rubber content: you do not need a separate rubber biome mod for the core loop.
-- Optional mods only unlock extra integrations; the tree and latex items work with Dynamic Trees alone.
-- Built for NeoForge 1.21.1.
 
 ## Links
 
