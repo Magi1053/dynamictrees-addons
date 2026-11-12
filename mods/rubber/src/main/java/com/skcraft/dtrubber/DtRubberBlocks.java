@@ -9,6 +9,8 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.SignItem;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.ButtonBlock;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.LeavesBlock;
 import net.minecraft.world.level.block.CeilingHangingSignBlock;
 import net.minecraft.world.level.block.DispenserBlock;
 import net.minecraft.world.level.block.DoorBlock;
@@ -51,6 +53,11 @@ public final class DtRubberBlocks {
     public static final DeferredBlock<RotatedPillarBlock> RUBBER_WOOD = BLOCKS.register(
             "rubber_wood",
             () -> new StrippableRubberLogBlock(STRIPPED_RUBBER_WOOD, woodProperties(MapColor.PODZOL))
+    );
+    // Keep rubber_leaves reserved for the existing Dynamic Trees canopy block.
+    public static final DeferredBlock<LeavesBlock> RUBBER_LEAVES = BLOCKS.register(
+            "rubber_leaves_block",
+            () -> new LeavesBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.JUNGLE_LEAVES))
     );
     public static final DeferredBlock<Block> RUBBER_PLANKS = BLOCKS.register("rubber_planks", () -> new Block(plankProperties()));
     public static final DeferredBlock<SlabBlock> RUBBER_SLAB = BLOCKS.register("rubber_slab", () -> new SlabBlock(plankProperties()));
@@ -135,6 +142,7 @@ public final class DtRubberBlocks {
     public static final DeferredItem<BlockItem> RUBBER_LOG_ITEM = ITEMS.registerSimpleBlockItem(RUBBER_LOG);
     public static final DeferredItem<BlockItem> STRIPPED_RUBBER_WOOD_ITEM = ITEMS.registerSimpleBlockItem(STRIPPED_RUBBER_WOOD);
     public static final DeferredItem<BlockItem> RUBBER_WOOD_ITEM = ITEMS.registerSimpleBlockItem(RUBBER_WOOD);
+    public static final DeferredItem<BlockItem> RUBBER_LEAVES_ITEM = ITEMS.registerSimpleBlockItem(RUBBER_LEAVES);
     public static final DeferredItem<BlockItem> RUBBER_PLANKS_ITEM = ITEMS.registerSimpleBlockItem(RUBBER_PLANKS);
     public static final DeferredItem<BlockItem> RUBBER_SLAB_ITEM = ITEMS.registerSimpleBlockItem(RUBBER_SLAB);
     public static final DeferredItem<BlockItem> RUBBER_STAIRS_ITEM = ITEMS.registerSimpleBlockItem(RUBBER_STAIRS);

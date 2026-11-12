@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.53
+
+- Added placeable rubber leaves, dropped by dynamic and placed rubber leaves when harvested with shears or Silk Touch.
+
 ## 1.0.52
 
 - Added the full vanilla rubber wood set: wood, stairs, fence, fence gate, door, trapdoor, button, pressure plate, signs, hanging signs, boat, and chest boat.

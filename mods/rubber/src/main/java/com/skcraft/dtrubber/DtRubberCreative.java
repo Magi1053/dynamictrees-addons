@@ -25,6 +25,8 @@ public final class DtRubberCreative {
                     DtRubberBlocks.RUBBER_PRESSURE_PLATE_ITEM,
                     DtRubberBlocks.RUBBER_BUTTON_ITEM
             );
+        } else if (event.getTabKey() == CreativeModeTabs.NATURAL_BLOCKS) {
+            accept(event, DtRubberBlocks.RUBBER_LEAVES_ITEM);
         } else if (event.getTabKey() == CreativeModeTabs.FUNCTIONAL_BLOCKS) {
             accept(event, DtRubberBlocks.RUBBER_SIGN_ITEM, DtRubberBlocks.RUBBER_HANGING_SIGN_ITEM);
         } else if (event.getTabKey() == CreativeModeTabs.TOOLS_AND_UTILITIES) {

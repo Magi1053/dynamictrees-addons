@@ -1,5 +1,4 @@
 import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
@@ -183,7 +182,7 @@ function writeTreePack() {
     });
 
     writeJson(join(treeRoot, "leaves_properties", `${SPECIES}.json`), {
-        primitive_leaves: "minecraft:jungle_leaves",
+        primitive_leaves: `${MOD_ID}:rubber_leaves_block`,
         light_requirement: 12,
     });
 
@@ -315,6 +314,59 @@ function writeLootTables(preservedTreeLoot) {
     cloneLoot("trees/voluntary/jungle.json", "trees/voluntary/rubber.json", replacements);
 }
 
+function writeLeafResources() {
+    const leaves = "dtrubber:rubber_leaves_block";
+    const harvest = {
+        condition: "minecraft:any_of",
+        terms: [
+            { condition: "minecraft:match_tool", predicate: { items: "minecraft:shears" } },
+            {
+                condition: "minecraft:match_tool",
+                predicate: {
+                    predicates: {
+                        "minecraft:enchantments": [{ enchantments: "minecraft:silk_touch", levels: { min: 1 } }],
+                    },
+                },
+            },
+        ],
+    };
+    const normalDrops = JSON.parse(readFileSync(out("data", MOD_ID, "loot_table", "trees/leaves/rubber.json"), "utf8"));
+    // A placed vanilla leaf has no DT species context; use the rubber seed directly.
+    for (const pool of normalDrops.pools) {
+        pool.conditions = [{ condition: "minecraft:inverted", term: harvest }];
+        for (const entry of pool.entries) {
+            if (entry.type === "dynamictrees:seed_item") {
+                entry.type = "minecraft:item";
+                entry.name = "dtrubber:rubber_seed";
+                entry.conditions = entry.conditions.filter((c) => c.condition !== "dynamictrees:seasonal_seed_drop_chance");
+            }
+        }
+    }
+    const harvestPool = {
+        rolls: 1,
+        entries: [{ type: "minecraft:item", name: leaves }],
+        conditions: [harvest],
+    };
+    normalDrops.pools.unshift(harvestPool);
+    delete normalDrops.random_sequence;
+    writeJson(out("data", MOD_ID, "loot_table", "blocks/rubber_leaves_block.json"), normalDrops);
+    const dynamicDrops = JSON.parse(readFileSync(out("data", MOD_ID, "loot_table", "trees/leaves/rubber.json"), "utf8"));
+    for (const pool of dynamicDrops.pools) {
+        pool.conditions = [{ condition: "minecraft:inverted", term: harvest }];
+    }
+    dynamicDrops.pools.unshift(harvestPool);
+    delete dynamicDrops.random_sequence;
+    writeJson(out("data", MOD_ID, "loot_table", "blocks/rubber_leaves.json"), dynamicDrops);
+    writeJson(out("assets", MOD_ID, "blockstates/rubber_leaves_block.json"), {
+        variants: { "": { model: "dtrubber:block/rubber_leaves" } },
+    });
+    writeJson(out("assets", MOD_ID, "models/item/rubber_leaves_block.json"), {
+        parent: "dtrubber:block/rubber_leaves",
+    });
+    writeTag("minecraft", "block", "leaves", [leaves]);
+    writeTag("minecraft", "item", "leaves", [leaves]);
+}
+
 function resolveJavaCli() {
     if (process.env.JAVA) {
         return process.env.JAVA;
@@ -383,7 +435,9 @@ function findMinecraftResourcesJar() {
 }
 
 function extractJarEntries(jar, entries) {
-    const temp = mkdtempSync(join(tmpdir(), "dtrubber-mc-"));
+    const scratch = join(repoRoot, ".tmp", "agent-rubber-leaves");
+    mkdirSync(scratch, { recursive: true });
+    const temp = mkdtempSync(join(scratch, "vanilla-assets-"));
     const result = spawnSync("jar", ["xf", jar, ...entries], { cwd: temp, encoding: "utf8" });
     if (result.status !== 0) {
         rmSync(temp, { recursive: true, force: true });
@@ -1475,6 +1529,7 @@ function writeLang() {
         [`block.${MOD_ID}.rubber_hanging_sign`]: "Rubber Hanging Sign",
         [`block.${MOD_ID}.rubber_wall_hanging_sign`]: "Rubber Wall Hanging Sign",
         [`block.${MOD_ID}.${SPECIES}_leaves`]: "Rubber Leaves",
+        [`block.${MOD_ID}.rubber_leaves_block`]: "Rubber Leaves",
         [`block.${MOD_ID}.${SPECIES}_sapling`]: "Rubber Sapling",
         [`item.${MOD_ID}.${SPECIES}_seed`]: "Rubber Seed",
         [`item.${MOD_ID}.rubber_boat`]: "Rubber Boat",
@@ -1530,6 +1585,7 @@ writeJson(out("data", "dynamictrees", "tags", "block", "leaves.json"), {
     values: [`${MOD_ID}:${SPECIES}_leaves`],
 });
 writeLootTables(preservedTreeLoot);
+writeLeafResources();
 writeWoodAssets();
 writeWoodLootTables();
 writeWoodTags();

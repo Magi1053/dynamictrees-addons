@@ -19,6 +19,7 @@ libs/
 .tmp/
 artifacts/
 data/
+!mods/rubber/src/main/resources/data/
 gates/
 GATES.md
 PLAN.md
