@@ -86,6 +86,11 @@ must not snap on collision and must not be removed because a neighbor was
 mined or snapped. Only a player mining that core removes it.
 
 ### R5. Thin wood and leaves auto-break through one transaction
+
+Native leaf hydration, water and shade removal must enter the same managed
+leaf-harvest transaction before clearing a body-owned leaf. Each removal pays
+its species-specific leaf loot once and updates the existing leaf ownership
+and seed ledger. Unmanaged leaves and disabled-addon behavior remain native DT.
 `radius < 4` branches snap when impact speed exceeds their thickness-scaled
 `branch_collision_break_velocity`. Fallen leaves use the separate
 `leaf_collision_break_velocity` threshold (default 0.25 m/s).

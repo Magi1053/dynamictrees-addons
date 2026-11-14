@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.11
+
+- Fallen leaves now pay their normal species loot when hydration, shade or water removes them, matching manual and impact harvesting.
+- Preserve leaf ownership and the existing seed quota while paying each removed leaf once.
+
 ## 1.1.10
 
 - Wrong-tool branch breaks use Dynamic Trees' normal cut calculation, removing only the portion beyond the cut and preserving the rooted remainder instead of deleting the entire connected tree.
